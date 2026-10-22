@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #050817;
+    --bg-sidebar: #070D20;
+    --bg-panel: #0B142B;
+    --bg-panel-elevated: #101B35;
+    --border-color: #202D50;
+    --primary-violet: #7C3AED;
+    --electric-purple: #A855F7;
+    --neon-cyan: #22D3EE;
+    --network-blue: #3B82F6;
+    --critical-red: #FF365D;
+    --warning-amber: #F59E0B;
+    --success-green: #10B981;
+    --text-main: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+
+    --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Pro Mono', Menlo, Monaco, Consolas, monospace;
+  }
+
+  * {
+    border-color: #202D50;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: var(--font-inter);
+    background-color: #050817;
+    color: #F1F5F9;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #070D20;
+}
+::-webkit-scrollbar-thumb {
+  background: #202D50;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7C3AED;
+}
+
+/* Technical Grids & Cyber Patterns */
+/* Global workspace grid with reduced opacity (0.12) to keep text crisp */
+.bg-tech-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(32, 45, 80, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(32, 45, 80, 0.12) 1px, transparent 1px);
+}
+
+/* Technical grid inside Network Topology graph with subtle perspective dots */
+.bg-topology-grid {
+  background-size: 28px 28px;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.2) 1px, transparent 0),
+    linear-gradient(to right, rgba(124, 58, 237, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+}
+
+/* Subtle, matte surfaces with restrained glows */
+.glow-violet-subtle {
+  box-shadow: 0 0 16px -4px rgba(124, 58, 237, 0.25);
+}
+
+.glow-red-subtle {
+  box-shadow: 0 0 16px -4px rgba(255, 54, 93, 0.3);
+}
+
+/* Suspicious route dashed animation */
+@keyframes suspiciousDash {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+.animate-suspicious-path {
+  stroke-dasharray: 7, 5;
+  animation: suspiciousDash 1.2s linear infinite;
+}
+
+/* Normal connection soft pulse */
+@keyframes normalPulse {
+  0%, 100% {
+    stroke-opacity: 0.6;
+  }
+  50% {
+    stroke-opacity: 0.95;
+    filter: drop-shadow(0 0 3px rgba(34, 211, 238, 0.6));
+  }
+}
+
+.animate-normal-edge {
+  animation: normalPulse 3.5s ease-in-out infinite;
+}
+
+/* Floating particles */
+@keyframes floatParticle {
+  0%, 100% { transform: translateY(0px); opacity: 0.35; }
+  50% { transform: translateY(-8px); opacity: 0.75; }
+}
+
+.particle-pulse {
+  animation: floatParticle 4s ease-in-out infinite;
+}

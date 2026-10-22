@@ -1,0 +1,183 @@
+{
+  "id": "net-enterprise-dmz-01",
+  "name": "Enterprise Production Hybrid Cloud",
+  "version": "1.0.0",
+  "devices": [
+    {
+      "id": "dmz-web-01",
+      "name": "Public Web Frontend",
+      "type": "host",
+      "zone": "DMZ",
+      "ip": "10.0.1.10"
+    },
+    {
+      "id": "fw-edge",
+      "name": "Perimeter Firewall",
+      "type": "firewall",
+      "zone": "EDGE",
+      "ip": "10.0.1.1"
+    },
+    {
+      "id": "app-server-01",
+      "name": "Internal Application Server",
+      "type": "server",
+      "zone": "INTERNAL",
+      "ip": "10.0.2.20"
+    },
+    {
+      "id": "fw-core",
+      "name": "Core Internal Firewall",
+      "type": "firewall",
+      "zone": "CORE",
+      "ip": "10.0.2.1"
+    },
+    {
+      "id": "jumpbox-admin",
+      "name": "Operations Bastion Host",
+      "type": "host",
+      "zone": "INTERNAL",
+      "ip": "10.0.2.99"
+    },
+    {
+      "id": "db-prod-01",
+      "name": "Production Customer Database",
+      "type": "database",
+      "zone": "DATA",
+      "ip": "10.0.3.50"
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-1",
+      "source": "dmz-web-01",
+      "target": "fw-edge",
+      "bidirectional": true
+    },
+    {
+      "id": "conn-2",
+      "source": "fw-edge",
+      "target": "app-server-01",
+      "bidirectional": true
+    },
+    {
+      "id": "conn-3",
+      "source": "app-server-01",
+      "target": "fw-core",
+      "bidirectional": true
+    },
+    {
+      "id": "conn-4",
+      "source": "jumpbox-admin",
+      "target": "fw-core",
+      "bidirectional": true
+    },
+    {
+      "id": "conn-5",
+      "source": "fw-core",
+      "target": "db-prod-01",
+      "bidirectional": true
+    },
+    {
+      "id": "conn-6-shadow",
+      "source": "dmz-web-01",
+      "target": "fw-core",
+      "bidirectional": true
+    }
+  ],
+  "firewall_rules": [
+    {
+      "id": "FW-EDGE-001",
+      "device_id": "fw-edge",
+      "action": "ALLOW",
+      "source_zone": "DMZ",
+      "destination_zone": "INTERNAL",
+      "source_ip": "10.0.1.10",
+      "destination_ip": "10.0.2.20",
+      "protocol": "TCP",
+      "port": 8080,
+      "priority": 100,
+      "enabled": true,
+      "description": "Permit web tier to query internal application service"
+    },
+    {
+      "id": "FW-CORE-001",
+      "device_id": "fw-core",
+      "action": "ALLOW",
+      "source_zone": "INTERNAL",
+      "destination_zone": "DATA",
+      "source_ip": "10.0.2.20",
+      "destination_ip": "10.0.3.50",
+      "protocol": "TCP",
+      "port": 5432,
+      "priority": 100,
+      "enabled": true,
+      "description": "Legitimate PostgreSQL access for application tier"
+    },
+    {
+      "id": "FW-CORE-002",
+      "device_id": "fw-core",
+      "action": "ALLOW",
+      "source_zone": "INTERNAL",
+      "destination_zone": "DATA",
+      "source_ip": "10.0.2.99",
+      "destination_ip": "10.0.3.50",
+      "protocol": "TCP",
+      "port": 22,
+      "priority": 100,
+      "enabled": true,
+      "description": "Bastion admin SSH access to database host"
+    },
+    {
+      "id": "FW-CORE-003",
+      "device_id": "fw-core",
+      "action": "ALLOW",
+      "source_zone": "*",
+      "destination_zone": "DATA",
+      "source_ip": "*",
+      "destination_ip": "10.0.3.50",
+      "protocol": "TCP",
+      "port": 5432,
+      "priority": 200,
+      "enabled": true,
+      "description": "DEPRECATED: Temporary troubleshooting rule left open across all zones"
+    }
+  ],
+  "access_policies": [
+    {
+      "id": "POL-DMZ-DB-ISOLATION",
+      "name": "DMZ to Production Database Isolation",
+      "description": "Zero-trust policy: Public DMZ hosts must NEVER have direct connectivity to production database tier",
+      "source": "dmz-web-01",
+      "destination": "db-prod-01",
+      "protocol": "TCP",
+      "port": 5432,
+      "expected_verdict": "DENY",
+      "required": false,
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "POL-APP-DB-ALLOWED",
+      "name": "Application Server Database Connectivity",
+      "description": "Required business traffic: Internal application server must be able to query customer database",
+      "source": "app-server-01",
+      "destination": "db-prod-01",
+      "protocol": "TCP",
+      "port": 5432,
+      "expected_verdict": "ALLOW",
+      "required": true,
+      "severity": "HIGH"
+    },
+    {
+      "id": "POL-ADMIN-SSH-ALLOWED",
+      "name": "Bastion Host Database Admin Access",
+      "description": "Required operations traffic: Admin jumpbox must be able to SSH into database host",
+      "source": "jumpbox-admin",
+      "destination": "db-prod-01",
+      "protocol": "TCP",
+      "port": 22,
+      "expected_verdict": "ALLOW",
+      "required": true,
+      "severity": "MEDIUM"
+    }
+  ]
+}
