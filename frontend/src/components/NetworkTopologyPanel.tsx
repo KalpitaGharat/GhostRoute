@@ -465,10 +465,16 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               const isHovered = hoveredEdgeId === edge.id;
 
               // Arc Calculation:
-              // Suspicious Ghost Route arches at cy=115, well below zone headers (y=63) and well above app-server-01 (y=180)!
+              // Suspicious Ghost Route arches smoothly OVER app-server-01 (y=180) via cubic Bezier
               const cx = (sourceNode.x + targetNode.x) / 2;
-              const cy = isSuspicious ? 115 : (sourceNode.y + targetNode.y) / 2;
-              const pathData = `M ${sourceNode.x} ${sourceNode.y} Q ${cx} ${cy} ${targetNode.x} ${targetNode.y}`;
+              const cy = (sourceNode.y + targetNode.y) / 2;
+              const pathData = isSuspicious
+                ? `M ${sourceNode.x} ${sourceNode.y} C 450 70, 580 70, ${targetNode.x} ${targetNode.y}`
+                : `M ${sourceNode.x} ${sourceNode.y} Q ${cx} ${cy} ${targetNode.x} ${targetNode.y}`;
+
+              // Position TCP Threat Badge on the right side of app-server-01 along the path to fw-core
+              const badgeX = isSuspicious ? 660 : cx;
+              const badgeY = isSuspicious ? 180 : cy + 14;
 
               return (
                 <g
@@ -529,18 +535,14 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
                         className="animate-suspicious-path"
                         markerEnd="url(#arrow-suspicious)"
                       />
-                      {/* Rapid red particle packet surging along the ghost route */}
-                      <circle r="4" fill="#FFFFFF" stroke="#FF2E5B" strokeWidth="2">
-                        <animateMotion path={pathData} dur="1.4s" repeatCount="indefinite" />
-                      </circle>
 
-                      {/* Unified Cyber Threat Pill at apex of ghost route (100% Zero Collision) */}
-                      <g transform={`translate(${cx}, ${cy})`}>
+                      {/* Unified Cyber Threat Pill shifted to the right side (between app-server and fw-core) */}
+                      <g transform={`translate(${badgeX}, ${badgeY})`}>
                         {/* High-contrast solid dark backdrop to isolate completely */}
                         <rect
-                          x="-50"
+                          x="-45"
                           y="-13"
-                          width="100"
+                          width="90"
                           height="26"
                           rx="6"
                           fill="#1A050B"
@@ -549,9 +551,9 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
                           filter="url(#suspicious-glow)"
                         />
                         <rect
-                          x="-48"
+                          x="-43"
                           y="-11"
-                          width="96"
+                          width="86"
                           height="22"
                           rx="5"
                           fill="#290710"
@@ -559,14 +561,14 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
                           strokeWidth="0.8"
                         />
                         {/* Warning Alert Icon */}
-                        <foreignObject x="-42" y="-7" width="14" height="14" className="pointer-events-none">
+                        <foreignObject x="-38" y="-7" width="14" height="14" className="pointer-events-none">
                           <div className="w-full h-full flex items-center justify-center">
                             <AlertTriangle className="w-3.5 h-3.5 text-[#FF2E5B] animate-pulse" />
                           </div>
                         </foreignObject>
                         {/* Protocol Text Badge */}
                         <text
-                          x="7"
+                          x="9"
                           y="4"
                           textAnchor="middle"
                           fill="#FFA3B4"
@@ -578,6 +580,11 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
                           TCP:5432
                         </text>
                       </g>
+
+                      {/* Rapid red particle packet surging along the ghost route (rendered on top so it sweeps cleanly over) */}
+                      <circle r="4.5" fill="#FFFFFF" stroke="#FF2E5B" strokeWidth="2" filter="url(#suspicious-glow)">
+                        <animateMotion path={pathData} dur="1.4s" repeatCount="indefinite" />
+                      </circle>
                     </>
                   )}
 
