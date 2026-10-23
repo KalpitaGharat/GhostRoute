@@ -67,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
         {backendOnline === true && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs font-mono" title="Backend API reachable at localhost:8000">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs font-mono" title="Backend API online and reachable">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]" />
@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
         {backendOnline === false && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/40 border border-amber-500/30 text-[#F59E0B] text-xs font-mono" title="Cannot reach localhost:8000 — running on mock data">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/40 border border-amber-500/30 text-[#F59E0B] text-xs font-mono" title="Cannot reach backend API — running on mock data">
             <span className="w-2 h-2 rounded-full bg-[#F59E0B] animate-pulse" />
             <span className="text-[11px] font-medium">Backend Offline</span>
           </div>

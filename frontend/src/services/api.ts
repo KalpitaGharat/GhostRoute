@@ -1,10 +1,10 @@
 /**
  * GhostRoute AI — Backend API Client
  * Typed fetch wrappers matching the FastAPI endpoints in API_CONTRACT.md
- * Base URL: http://localhost:8000
+ * Uses relative /api endpoint routed to the internal backend via BFF proxy or Vite dev proxy
  */
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 
 // ─── Backend Schema Types ───────────────────────────────────────────────────
 
