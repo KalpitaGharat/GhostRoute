@@ -388,10 +388,10 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               <rect x="270" y="38" width="180" height="445" rx="12" fill="url(#warning-hatch)" />
               <path d="M 270 52 L 270 38 L 284 38" fill="none" stroke="#00F0FF" strokeWidth="2.5" />
               <path d="M 436 483 L 450 483 L 450 469" fill="none" stroke="#00F0FF" strokeWidth="2.5" />
-              <text x="284" y="62" fill="#00F0FF" fontSize="10.5" fontFamily="monospace" fontWeight="bold">
+              <text x="284" y="52" fill="#00F0FF" fontSize="10.5" fontFamily="monospace" fontWeight="bold">
                 ZONE: DMZ [EXPOSED]
               </text>
-              <text x="284" y="74" fill="#0284C7" fontSize="8.5" fontFamily="monospace">
+              <text x="284" y="63" fill="#0284C7" fontSize="8.5" fontFamily="monospace">
                 PUBLIC FACING // 10.0.1.0/24
               </text>
             </g>
@@ -413,10 +413,10 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               />
               <path d="M 470 52 L 470 38 L 484 38" fill="none" stroke="#A855F7" strokeWidth="2.5" />
               <path d="M 786 483 L 800 483 L 800 469" fill="none" stroke="#A855F7" strokeWidth="2.5" />
-              <text x="484" y="62" fill="#C084FC" fontSize="10.5" fontFamily="monospace" fontWeight="bold">
+              <text x="484" y="52" fill="#C084FC" fontSize="10.5" fontFamily="monospace" fontWeight="bold">
                 ZONE: INTERNAL TRUSTED
               </text>
-              <text x="484" y="74" fill="#7C3AED" fontSize="8.5" fontFamily="monospace">
+              <text x="484" y="63" fill="#7C3AED" fontSize="8.5" fontFamily="monospace">
                 PRIVATE SERVICES & BASTION // 10.0.2.0/24
               </text>
             </g>
@@ -438,10 +438,10 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               />
               <path d="M 820 52 L 820 38 L 834 38" fill="none" stroke="#FF2E5B" strokeWidth="2.5" />
               <path d="M 976 483 L 990 483 L 990 469" fill="none" stroke="#FF2E5B" strokeWidth="2.5" />
-              <text x="834" y="62" fill="#FF4D79" fontSize="10.5" fontFamily="monospace" fontWeight="bold">
+              <text x="834" y="52" fill="#FF4D79" fontSize="10.5" fontFamily="monospace" fontWeight="bold">
                 ZONE: DATA [SECURE]
               </text>
-              <text x="834" y="74" fill="#E11D48" fontSize="8.5" fontFamily="monospace">
+              <text x="834" y="63" fill="#E11D48" fontSize="8.5" fontFamily="monospace">
                 ISOLATED VAULT // 10.0.3.0/24
               </text>
             </g>
@@ -465,9 +465,9 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               const isHovered = hoveredEdgeId === edge.id;
 
               // Arc Calculation:
-              // Suspicious Ghost Route arches HIGH above the nodes (apex at y=80) to guarantee ZERO collision!
+              // Suspicious Ghost Route arches at cy=115, well below zone headers (y=63) and well above app-server-01 (y=180)!
               const cx = (sourceNode.x + targetNode.x) / 2;
-              const cy = isSuspicious ? 80 : (sourceNode.y + targetNode.y) / 2;
+              const cy = isSuspicious ? 115 : (sourceNode.y + targetNode.y) / 2;
               const pathData = `M ${sourceNode.x} ${sourceNode.y} Q ${cx} ${cy} ${targetNode.x} ${targetNode.y}`;
 
               return (
@@ -534,36 +534,46 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
                         <animateMotion path={pathData} dur="1.4s" repeatCount="indefinite" />
                       </circle>
 
-                      {/* Warning Alert Icon Capsule at apex of ghost route */}
-                      <g transform={`translate(${cx}, ${cy - 16})`}>
-                        <circle cx="0" cy="0" r="12" fill="#24060E" stroke="#FF2E5B" strokeWidth="1.8" />
-                        <foreignObject x="-7" y="-7" width="14" height="14" className="pointer-events-none">
+                      {/* Unified Cyber Threat Pill at apex of ghost route (100% Zero Collision) */}
+                      <g transform={`translate(${cx}, ${cy})`}>
+                        {/* High-contrast solid dark backdrop to isolate completely */}
+                        <rect
+                          x="-50"
+                          y="-13"
+                          width="100"
+                          height="26"
+                          rx="6"
+                          fill="#1A050B"
+                          stroke="#FF2E5B"
+                          strokeWidth="1.6"
+                          filter="url(#suspicious-glow)"
+                        />
+                        <rect
+                          x="-48"
+                          y="-11"
+                          width="96"
+                          height="22"
+                          rx="5"
+                          fill="#290710"
+                          stroke="#FF2E5B"
+                          strokeWidth="0.8"
+                        />
+                        {/* Warning Alert Icon */}
+                        <foreignObject x="-42" y="-7" width="14" height="14" className="pointer-events-none">
                           <div className="w-full h-full flex items-center justify-center">
                             <AlertTriangle className="w-3.5 h-3.5 text-[#FF2E5B] animate-pulse" />
                           </div>
                         </foreignObject>
-                      </g>
-
-                      {/* Protocol Badge below the warning icon */}
-                      <g transform={`translate(${cx}, ${cy + 14})`}>
-                        <rect
-                          x="-28"
-                          y="-9"
-                          width="56"
-                          height="18"
-                          rx="4"
-                          fill="#1C060D"
-                          stroke="#FF2E5B"
-                          strokeWidth="1.2"
-                        />
+                        {/* Protocol Text Badge */}
                         <text
-                          x="0"
+                          x="7"
                           y="4"
                           textAnchor="middle"
-                          fill="#FF8096"
-                          fontSize="9.5"
+                          fill="#FFA3B4"
+                          fontSize="10"
                           fontFamily="monospace"
                           fontWeight="bold"
+                          letterSpacing="0.06em"
                         >
                           TCP:5432
                         </text>
