@@ -197,30 +197,39 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          2. MAIN SVG CANVAS AREA WITH CRAZY SCI-FI BACKGROUND
+          2. DOCKED CYBER TELEMETRY & LEGEND STRIP (Zero Overlapping)
       ───────────────────────────────────────────────────────────── */}
-      <div className="relative flex-1 w-full overflow-hidden bg-[#040818]">
-        {/* Top-Right Cyber Legend */}
-        <div className="absolute top-3 right-3 z-10 p-2.5 rounded-lg bg-[#070D20]/95 border border-[#202D50] backdrop-blur-md shadow-xl text-[10.5px] font-mono space-y-1.5 pointer-events-auto">
-          <div className="font-bold text-[#F1F5F9] text-[9.5px] uppercase tracking-wider border-b border-[#202D50] pb-1 flex items-center justify-between gap-2">
-            <span>Path Types & Legend</span>
-            <span className="text-[8px] text-cyan-400 font-normal">REALTIME</span>
+      <div className="px-4 py-1.5 bg-[#060D24] border-b border-[#1E2E55] flex flex-wrap items-center justify-between gap-3 text-[10.5px] font-mono shrink-0 z-10 shadow-sm">
+        {/* Left: Path types with live neon indicators */}
+        <div className="flex items-center gap-4">
+          <span className="text-slate-400 font-semibold uppercase text-[9px] tracking-wider flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            Path Types:
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3.5 h-0.5 bg-[#22D3EE] inline-block shadow-[0_0_8px_#22D3EE]" />
+            <span className="text-slate-300 font-medium">Authorized Path</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-0.5 bg-[#22D3EE] inline-block shadow-[0_0_8px_#22D3EE]" />
-            <span className="text-slate-300">Normal Path (Authorized)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-0.5 border-b-2 border-dashed border-[#FF365D] inline-block shadow-[0_0_8px_#FF365D]" />
+          <div className="flex items-center gap-1.5">
+            <span className="w-3.5 h-0.5 border-b-2 border-dashed border-[#FF365D] inline-block shadow-[0_0_8px_#FF365D]" />
             <span className="text-[#FF365D] font-bold">Suspicious Ghost Route</span>
           </div>
-          <div className="pt-1 border-t border-[#202D50] flex flex-wrap gap-2 text-[9.5px]">
-            <span className="text-[#38BDF8]">● Edge</span>
-            <span className="text-[#00F0FF]">● DMZ</span>
-            <span className="text-[#A855F7]">● Internal</span>
-            <span className="text-[#FF365D]">● Data</span>
-          </div>
         </div>
+
+        {/* Right: Security Zone Color Badges */}
+        <div className="flex items-center gap-3">
+          <span className="text-slate-400 font-semibold uppercase text-[9px] tracking-wider">Zones:</span>
+          <span className="text-[#38BDF8] flex items-center gap-1 font-medium">● Edge</span>
+          <span className="text-[#00F0FF] flex items-center gap-1 font-medium">● DMZ</span>
+          <span className="text-[#C084FC] flex items-center gap-1 font-medium">● Internal</span>
+          <span className="text-[#FF365D] flex items-center gap-1 font-medium">● Data</span>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          3. MAIN SVG CANVAS AREA (100% Unobstructed, Zero Overlaps)
+      ───────────────────────────────────────────────────────────── */}
+      <div className="relative flex-1 w-full overflow-hidden bg-[#040818]">
 
         {/* Main SVG Visualization */}
         <svg
