@@ -103,28 +103,31 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
   return (
     <div
       ref={panelRef}
-      className={`rounded-xl bg-[#0B142B] border border-[#202D50] flex flex-col justify-between shadow-xl relative overflow-hidden backdrop-blur-md transition-all ${
-        isFullscreen ? 'fixed inset-0 z-50 rounded-none bg-[#050817] p-5' : 'h-[530px]'
+      className={`rounded-xl bg-[#070D22] border border-[#202D50] flex flex-col justify-between shadow-2xl relative overflow-hidden backdrop-blur-md transition-all ${
+        isFullscreen ? 'fixed inset-0 z-50 rounded-none bg-[#050817] p-5' : 'h-[640px]'
       }`}
     >
-      {/* 1. PANEL HEADER & TOOLBAR */}
-      <div className="px-4 py-3 border-b border-[#202D50] bg-[#070D20]/90 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0 z-20">
+      {/* ─────────────────────────────────────────────────────────────
+          1. PANEL HEADER & TOOLBAR
+      ───────────────────────────────────────────────────────────── */}
+      <div className="px-4 py-3 border-b border-[#202D50] bg-[#070D20]/95 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0 z-20 shadow-md">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-bold text-[#F1F5F9] font-sans tracking-tight">
+            <h2 className="text-sm font-bold text-[#F1F5F9] font-sans tracking-tight flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
               Interactive Network Topology
             </h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-950/80 text-[#FF365D] border border-rose-500/40 font-bold flex items-center gap-1.5 animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#FF365D]" />
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-950 text-[#FF365D] border border-rose-500/50 font-bold flex items-center gap-1.5 shadow-[0_0_10px_rgba(255,54,93,0.3)]">
+              <AlertTriangle className="w-3 h-3 text-[#FF365D]" />
               2 Ghost Routes Detected
             </span>
           </div>
           <p className="text-xs text-[#94A3B8] font-sans mt-0.5">
-            Explore trust paths, detect ghost routes, and analyze potential attack paths.
+            Deterministic trust path modeling, shadow connection discovery, and zero-trust verification.
           </p>
         </div>
 
-        {/* Toolbar: Zone filters, Search, Zoom, Fullscreen */}
+        {/* Toolbar Controls */}
         <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
           {/* Zone filter buttons */}
           <div className="flex items-center bg-[#050817] p-0.5 rounded-lg border border-[#202D50]">
@@ -132,9 +135,9 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               <button
                 key={zone}
                 onClick={() => setActiveZoneFilter(zone)}
-                className={`px-2.5 py-1 rounded text-[10.5px] font-medium transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 rounded text-[10.5px] font-medium transition-all cursor-pointer ${
                   activeZoneFilter === zone
-                    ? 'bg-[#7C3AED] text-white font-bold shadow-[0_0_8px_rgba(124,58,237,0.4)]'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-bold shadow-[0_0_10px_rgba(124,58,237,0.5)]'
                     : 'text-[#94A3B8] hover:text-[#F1F5F9]'
                 }`}
               >
@@ -151,11 +154,11 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search node / IP..."
-              className="w-32 sm:w-40 bg-[#050817] border border-[#202D50] focus:border-[#7C3AED] text-[#F1F5F9] placeholder-[#64748B] text-xs rounded-lg pl-8 pr-2.5 py-1 focus:outline-none"
+              className="w-32 sm:w-40 bg-[#050817] border border-[#202D50] focus:border-[#7C3AED] text-[#F1F5F9] placeholder-[#64748B] text-xs rounded-lg pl-8 pr-2.5 py-1 focus:outline-none transition-colors"
             />
           </div>
 
-          {/* Zoom In / Out / Reset / Fullscreen */}
+          {/* Zoom & Fullscreen Controls */}
           <div className="flex items-center gap-1">
             <button
               onClick={() => setZoomLevel((z) => Math.min(1.6, z + 0.15))}
@@ -193,27 +196,27 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
         </div>
       </div>
 
-      {/* 2. MAIN SVG CANVAS AREA */}
-      <div className="relative flex-1 w-full overflow-hidden bg-[#050817] bg-topology-grid">
-        {/* Perspective Glow Effect */}
-        <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_50%_45%,rgba(124,58,237,0.18),transparent_70%)]" />
-
-        {/* Legend Overlay at Top-Right */}
-        <div className="absolute top-3 right-3 z-10 p-2.5 rounded-lg bg-[#070D20]/95 border border-[#202D50] backdrop-blur-md shadow-lg text-[10.5px] font-mono space-y-1.5 pointer-events-auto">
-          <div className="font-bold text-[#F1F5F9] text-[9.5px] uppercase tracking-wider border-b border-[#202D50] pb-1">
-            Path Types & Legend
+      {/* ─────────────────────────────────────────────────────────────
+          2. MAIN SVG CANVAS AREA WITH CRAZY SCI-FI BACKGROUND
+      ───────────────────────────────────────────────────────────── */}
+      <div className="relative flex-1 w-full overflow-hidden bg-[#040818]">
+        {/* Top-Right Cyber Legend */}
+        <div className="absolute top-3 right-3 z-10 p-2.5 rounded-lg bg-[#070D20]/95 border border-[#202D50] backdrop-blur-md shadow-xl text-[10.5px] font-mono space-y-1.5 pointer-events-auto">
+          <div className="font-bold text-[#F1F5F9] text-[9.5px] uppercase tracking-wider border-b border-[#202D50] pb-1 flex items-center justify-between gap-2">
+            <span>Path Types & Legend</span>
+            <span className="text-[8px] text-cyan-400 font-normal">REALTIME</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-4 h-0.5 bg-[#22D3EE] inline-block shadow-[0_0_6px_#22D3EE]" />
-            <span className="text-[#94A3B8]">Normal Path (Authorized)</span>
+            <span className="w-4 h-0.5 bg-[#22D3EE] inline-block shadow-[0_0_8px_#22D3EE]" />
+            <span className="text-slate-300">Normal Path (Authorized)</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-4 h-0.5 border-b-2 border-dashed border-[#FF365D] inline-block shadow-[0_0_6px_#FF365D]" />
+            <span className="w-4 h-0.5 border-b-2 border-dashed border-[#FF365D] inline-block shadow-[0_0_8px_#FF365D]" />
             <span className="text-[#FF365D] font-bold">Suspicious Ghost Route</span>
           </div>
           <div className="pt-1 border-t border-[#202D50] flex flex-wrap gap-2 text-[9.5px]">
-            <span className="text-[#3B82F6]">● Edge</span>
-            <span className="text-[#0284C7]">● DMZ</span>
+            <span className="text-[#38BDF8]">● Edge</span>
+            <span className="text-[#00F0FF]">● DMZ</span>
             <span className="text-[#A855F7]">● Internal</span>
             <span className="text-[#FF365D]">● Data</span>
           </div>
@@ -221,7 +224,7 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
 
         {/* Main SVG Visualization */}
         <svg
-          viewBox="0 0 1020 450"
+          viewBox="0 0 1020 540"
           className="w-full h-full select-none"
           style={{
             transform: `scale(${zoomLevel})`,
@@ -230,7 +233,32 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
           }}
         >
           <defs>
-            {/* Arrowhead marker: Normal connection */}
+            {/* 1. Neon glow filters */}
+            <filter id="suspicious-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="4.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="cyan-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="radar-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* 2. Arrowhead markers */}
             <marker
               id="arrow-normal"
               viewBox="0 0 10 10"
@@ -240,14 +268,13 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               markerHeight="7"
               orient="auto-start-reverse"
             >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B82F6" />
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#38BDF8" />
             </marker>
 
-            {/* Arrowhead marker: Suspicious connection (adjusted refX so it touches boundary without overlapping) */}
             <marker
               id="arrow-suspicious"
               viewBox="0 0 10 10"
-              refX="22"
+              refX="24"
               refY="5"
               markerWidth="8"
               markerHeight="8"
@@ -256,45 +283,164 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF365D" />
             </marker>
 
-            {/* Red Glow Filter */}
-            <filter id="suspicious-glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="3.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+            {/* 3. Cyber grid pattern with intersection reticles */}
+            <pattern id="scifi-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#122046" strokeWidth="0.8" strokeOpacity="0.55" />
+              {/* Reticle crosses at corners */}
+              <path d="M -3 0 L 3 0 M 0 -3 L 0 3" stroke="#2563EB" strokeWidth="0.8" strokeOpacity="0.35" />
+            </pattern>
 
-            {/* Cyan Glow Filter */}
-            <filter id="cyan-glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+            {/* 4. Diagonal warning hatch pattern */}
+            <pattern id="warning-hatch" width="16" height="16" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="16" stroke="#FF365D" strokeWidth="1" strokeOpacity="0.08" />
+            </pattern>
           </defs>
 
-          {/* ZONE BACKGROUND RECTANGLES / SECURITY BOUNDARIES */}
-          <g className="zones opacity-30 pointer-events-none">
-            {/* Zone 1: Edge & Perimeter */}
-            <rect x="35" y="45" width="255" height="355" rx="14" fill="#070D20" stroke="#3B82F6" strokeWidth="1" strokeDasharray="4 4" />
-            <text x="50" y="72" fill="#3B82F6" fontSize="11" fontFamily="monospace" fontWeight="bold">ZONE: EDGE / PERIMETER</text>
+          {/* ═════════════════════════════════════════════════════════════════
+              BACKGROUND LAYER: CRAZY SCI-FI TACTICAL RADAR & MATRIX
+          ═════════════════════════════════════════════════════════════════ */}
+          <g className="scifi-background pointer-events-none">
+            {/* Deep Cyber Matrix Grid */}
+            <rect width="1020" height="540" fill="url(#scifi-grid)" />
 
-            {/* Zone 2: DMZ */}
-            <rect x="310" y="45" width="160" height="355" rx="14" fill="#082F49" stroke="#0284C7" strokeWidth="1" strokeDasharray="4 4" />
-            <text x="325" y="72" fill="#0284C7" fontSize="11" fontFamily="monospace" fontWeight="bold">ZONE: DMZ</text>
+            {/* Concentric Holographic Radar Rings centered around network core (x=550, y=270) */}
+            <g transform="translate(550, 270)" className="opacity-40">
+              {/* Ambient radial energy glow */}
+              <circle r="460" fill="none" stroke="#1E3A8A" strokeWidth="0.8" strokeOpacity="0.15" />
+              <circle r="360" fill="none" stroke="#2563EB" strokeWidth="0.8" strokeDasharray="4 6" strokeOpacity="0.25" />
+              <circle r="260" fill="none" stroke="#00F0FF" strokeWidth="1" strokeDasharray="3 4" strokeOpacity="0.3" />
+              <circle r="160" fill="none" stroke="#7C3AED" strokeWidth="1" strokeOpacity="0.35" />
+              <circle r="70" fill="none" stroke="#38BDF8" strokeWidth="1" strokeDasharray="2 3" strokeOpacity="0.4" />
 
-            {/* Zone 3: Internal */}
-            <rect x="490" y="45" width="320" height="355" rx="14" fill="#1E1B4B" stroke="#7C3AED" strokeWidth="1" strokeDasharray="4 4" />
-            <text x="505" y="72" fill="#A855F7" fontSize="11" fontFamily="monospace" fontWeight="bold">ZONE: INTERNAL TRUSTED</text>
+              {/* Radar Crosshairs */}
+              <line x1="-500" y1="0" x2="500" y2="0" stroke="#1D4ED8" strokeWidth="0.8" strokeDasharray="4 8" strokeOpacity="0.2" />
+              <line x1="0" y1="-260" x2="0" y2="260" stroke="#1D4ED8" strokeWidth="0.8" strokeDasharray="4 8" strokeOpacity="0.2" />
 
-            {/* Zone 4: Data */}
-            <rect x="830" y="45" width="160" height="355" rx="14" fill="#4C0519" stroke="#FF365D" strokeWidth="1" strokeDasharray="4 4" />
-            <text x="845" y="72" fill="#FF365D" fontSize="11" fontFamily="monospace" fontWeight="bold">ZONE: DATA</text>
+              {/* Azimuth Degree Ticks */}
+              <text x="75" y="-5" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.4">090°</text>
+              <text x="-105" y="-5" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.4">270°</text>
+              <text x="5" y="-165" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.4">000°</text>
+              <text x="5" y="175" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.4">180°</text>
+            </g>
+
+            {/* Floating Cyber Watermark Telemetry */}
+            <text x="45" y="525" fill="#1E3A8A" fontSize="9" fontFamily="monospace" fillOpacity="0.5">
+              TELEMETRY_ENGINE: ACTIVE // TOPOLOGY_MATRIX_v3.2 // REACHABILITY_OK
+            </text>
+            <text x="760" y="525" fill="#1E3A8A" fontSize="9" fontFamily="monospace" fillOpacity="0.5">
+              GRAPH_HASH: 0x9F41E8 // DETERMINISTIC_NX
+            </text>
           </g>
 
-          {/* CONNECTIONS / EDGES */}
+          {/* ═════════════════════════════════════════════════════════════════
+              SECURITY ZONES / RECTANGULAR REGIONS (NON-OVERLAPPING)
+          ═════════════════════════════════════════════════════════════════ */}
+          <g className="zones">
+            {/* Zone 1: EDGE / PERIMETER (x: 30 -> 250) */}
+            <g>
+              <rect
+                x="30"
+                y="38"
+                width="220"
+                height="445"
+                rx="12"
+                fill="#070D22"
+                fillOpacity="0.85"
+                stroke="#3B82F6"
+                strokeWidth="1.2"
+                strokeDasharray="5 4"
+                strokeOpacity="0.5"
+              />
+              <path d="M 30 52 L 30 38 L 44 38" fill="none" stroke="#3B82F6" strokeWidth="2.5" />
+              <path d="M 236 483 L 250 483 L 250 469" fill="none" stroke="#3B82F6" strokeWidth="2.5" />
+              <text x="44" y="62" fill="#38BDF8" fontSize="10.5" fontFamily="monospace" fontWeight="bold">
+                ZONE: EDGE / PERIMETER
+              </text>
+              <text x="44" y="74" fill="#64748B" fontSize="8.5" fontFamily="monospace">
+                GATEWAY INGRESS // 10.0.1.0/24
+              </text>
+            </g>
+
+            {/* Zone 2: DMZ (x: 270 -> 450) */}
+            <g>
+              <rect
+                x="270"
+                y="38"
+                width="180"
+                height="445"
+                rx="12"
+                fill="#051D33"
+                fillOpacity="0.85"
+                stroke="#00F0FF"
+                strokeWidth="1.2"
+                strokeDasharray="5 4"
+                strokeOpacity="0.6"
+              />
+              <rect x="270" y="38" width="180" height="445" rx="12" fill="url(#warning-hatch)" />
+              <path d="M 270 52 L 270 38 L 284 38" fill="none" stroke="#00F0FF" strokeWidth="2.5" />
+              <path d="M 436 483 L 450 483 L 450 469" fill="none" stroke="#00F0FF" strokeWidth="2.5" />
+              <text x="284" y="62" fill="#00F0FF" fontSize="10.5" fontFamily="monospace" fontWeight="bold">
+                ZONE: DMZ [EXPOSED]
+              </text>
+              <text x="284" y="74" fill="#0284C7" fontSize="8.5" fontFamily="monospace">
+                PUBLIC FACING // 10.0.1.0/24
+              </text>
+            </g>
+
+            {/* Zone 3: INTERNAL TRUSTED (x: 470 -> 800) */}
+            <g>
+              <rect
+                x="470"
+                y="38"
+                width="330"
+                height="445"
+                rx="12"
+                fill="#120E2C"
+                fillOpacity="0.85"
+                stroke="#A855F7"
+                strokeWidth="1.2"
+                strokeDasharray="5 4"
+                strokeOpacity="0.5"
+              />
+              <path d="M 470 52 L 470 38 L 484 38" fill="none" stroke="#A855F7" strokeWidth="2.5" />
+              <path d="M 786 483 L 800 483 L 800 469" fill="none" stroke="#A855F7" strokeWidth="2.5" />
+              <text x="484" y="62" fill="#C084FC" fontSize="10.5" fontFamily="monospace" fontWeight="bold">
+                ZONE: INTERNAL TRUSTED
+              </text>
+              <text x="484" y="74" fill="#7C3AED" fontSize="8.5" fontFamily="monospace">
+                PRIVATE SERVICES & BASTION // 10.0.2.0/24
+              </text>
+            </g>
+
+            {/* Zone 4: DATA TIER (x: 820 -> 990) */}
+            <g>
+              <rect
+                x="820"
+                y="38"
+                width="170"
+                height="445"
+                rx="12"
+                fill="#240714"
+                fillOpacity="0.85"
+                stroke="#FF2E5B"
+                strokeWidth="1.2"
+                strokeDasharray="5 4"
+                strokeOpacity="0.6"
+              />
+              <path d="M 820 52 L 820 38 L 834 38" fill="none" stroke="#FF2E5B" strokeWidth="2.5" />
+              <path d="M 976 483 L 990 483 L 990 469" fill="none" stroke="#FF2E5B" strokeWidth="2.5" />
+              <text x="834" y="62" fill="#FF4D79" fontSize="10.5" fontFamily="monospace" fontWeight="bold">
+                ZONE: DATA [SECURE]
+              </text>
+              <text x="834" y="74" fill="#E11D48" fontSize="8.5" fontFamily="monospace">
+                ISOLATED VAULT // 10.0.3.0/24
+              </text>
+            </g>
+          </g>
+
+          {/* ═════════════════════════════════════════════════════════════════
+              CONNECTIONS & SUSPICIOUS GHOST ROUTE EDGES
+          ═════════════════════════════════════════════════════════════════ */}
           <g className="edges">
             {edges.map((edge) => {
               const sourceNode = nodeMap.get(edge.source);
@@ -310,9 +456,9 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               const isHovered = hoveredEdgeId === edge.id;
 
               // Arc Calculation:
-              // For suspicious ghost route, arch HIGH ABOVE the nodes (offset -95) so it never touches or crosses app-server-01!
+              // Suspicious Ghost Route arches HIGH above the nodes (apex at y=80) to guarantee ZERO collision!
               const cx = (sourceNode.x + targetNode.x) / 2;
-              const cy = (sourceNode.y + targetNode.y) / 2 + (isSuspicious ? -95 : 0);
+              const cy = isSuspicious ? 80 : (sourceNode.y + targetNode.y) / 2;
               const pathData = `M ${sourceNode.x} ${sourceNode.y} Q ${cx} ${cy} ${targetNode.x} ${targetNode.y}`;
 
               return (
@@ -323,108 +469,118 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
                   onMouseLeave={() => setHoveredEdgeId(null)}
                   className="cursor-pointer group"
                 >
-                  {/* Thick hit area */}
-                  <path d={pathData} fill="none" stroke="transparent" strokeWidth="22" />
+                  {/* Thick invisible hit area */}
+                  <path d={pathData} fill="none" stroke="transparent" strokeWidth="26" />
 
-                  {/* Normal Connection */}
+                  {/* ──────────────── Normal Connection ──────────────── */}
                   {!isSuspicious && (
-                    <path
-                      d={pathData}
-                      fill="none"
-                      stroke={
-                        isConnectedToSelected || isSelected
-                          ? '#22D3EE'
-                          : isHovered
-                          ? '#38BDF8'
-                          : '#202D50'
-                      }
-                      strokeWidth={isConnectedToSelected || isSelected || isHovered ? 2.6 : 1.8}
-                      strokeOpacity={isConnectedToSelected || isSelected ? 1 : isHovered ? 0.9 : 0.65}
-                      className={isConnectedToSelected ? 'animate-normal-edge' : ''}
-                      markerEnd="url(#arrow-normal)"
-                    />
+                    <>
+                      <path
+                        d={pathData}
+                        fill="none"
+                        stroke={
+                          isConnectedToSelected || isSelected
+                            ? '#00F0FF'
+                            : isHovered
+                            ? '#38BDF8'
+                            : '#20325A'
+                        }
+                        strokeWidth={isConnectedToSelected || isSelected || isHovered ? 2.8 : 2}
+                        strokeOpacity={isConnectedToSelected || isSelected ? 1 : isHovered ? 0.95 : 0.75}
+                        markerEnd="url(#arrow-normal)"
+                      />
+                      {/* Flowing packet pulse along active connection */}
+                      {(isConnectedToSelected || isSelected || isHovered) && (
+                        <circle r="3.5" fill="#00F0FF" filter="url(#cyan-glow)">
+                          <animateMotion path={pathData} dur="2.2s" repeatCount="indefinite" />
+                        </circle>
+                      )}
+                    </>
                   )}
 
-                  {/* Suspicious Connection: Red dashed glowing line */}
+                  {/* ────────────── Suspicious Ghost Route Arc ────────────── */}
                   {isSuspicious && (
                     <>
-                      {/* Red Underglow */}
+                      {/* Deep crimson underglow */}
                       <path
                         d={pathData}
                         fill="none"
-                        stroke="#FF365D"
-                        strokeWidth="6"
-                        strokeOpacity="0.3"
+                        stroke="#FF2E5B"
+                        strokeWidth="8"
+                        strokeOpacity="0.35"
                         filter="url(#suspicious-glow)"
                       />
-                      {/* Pulsing Dashed Path */}
+                      {/* Pulsing dashed laser arc */}
                       <path
                         d={pathData}
                         fill="none"
-                        stroke="#FF365D"
-                        strokeWidth="3"
+                        stroke="#FF2E5B"
+                        strokeWidth="3.2"
+                        strokeDasharray="6 4"
                         className="animate-suspicious-path"
                         markerEnd="url(#arrow-suspicious)"
                       />
+                      {/* Rapid red particle packet surging along the ghost route */}
+                      <circle r="4" fill="#FFFFFF" stroke="#FF2E5B" strokeWidth="2">
+                        <animateMotion path={pathData} dur="1.4s" repeatCount="indefinite" />
+                      </circle>
 
-                      {/* Warning Symbol Positioned along the high arc summit (clear of all nodes) */}
-                      <g transform={`translate(${cx}, ${cy - 12})`}>
-                        <circle cx="0" cy="0" r="10" fill="#4C0519" stroke="#FF365D" strokeWidth="1.4" />
-                        <foreignObject x="-6" y="-6" width="12" height="12" className="pointer-events-none">
+                      {/* Warning Alert Icon Capsule at apex of ghost route */}
+                      <g transform={`translate(${cx}, ${cy - 16})`}>
+                        <circle cx="0" cy="0" r="12" fill="#24060E" stroke="#FF2E5B" strokeWidth="1.8" />
+                        <foreignObject x="-7" y="-7" width="14" height="14" className="pointer-events-none">
                           <div className="w-full h-full flex items-center justify-center">
-                            <AlertTriangle className="w-3 h-3 text-[#FF365D]" />
+                            <AlertTriangle className="w-3.5 h-3.5 text-[#FF2E5B] animate-pulse" />
                           </div>
                         </foreignObject>
+                      </g>
+
+                      {/* Protocol Badge below the warning icon */}
+                      <g transform={`translate(${cx}, ${cy + 14})`}>
+                        <rect
+                          x="-28"
+                          y="-9"
+                          width="56"
+                          height="18"
+                          rx="4"
+                          fill="#1C060D"
+                          stroke="#FF2E5B"
+                          strokeWidth="1.2"
+                        />
+                        <text
+                          x="0"
+                          y="4"
+                          textAnchor="middle"
+                          fill="#FF8096"
+                          fontSize="9.5"
+                          fontFamily="monospace"
+                          fontWeight="bold"
+                        >
+                          TCP:5432
+                        </text>
                       </g>
                     </>
                   )}
 
-                  {/* Protocol Label along the route - positioned above the arc so it never collides with any node */}
-                  {isSuspicious && (
-                    <g transform={`translate(${cx}, ${cy + 12})`}>
+                  {/* Hover readout for normal edge */}
+                  {!isSuspicious && (isHovered || isSelected) && (
+                    <g transform={`translate(${cx}, ${cy + 14})`}>
                       <rect
-                        x="-24"
-                        y="-8"
-                        width="48"
-                        height="16"
+                        x="-26"
+                        y="-9"
+                        width="52"
+                        height="18"
                         rx="4"
-                        fill="#4C0519"
-                        stroke="#FF365D"
+                        fill="#070D22"
+                        stroke="#38BDF8"
                         strokeWidth="1"
                       />
                       <text
                         x="0"
-                        y="3.5"
-                        textAnchor="middle"
-                        fill="#FF8096"
-                        fontSize="9"
-                        fontFamily="monospace"
-                        fontWeight="bold"
-                      >
-                        {edge.protocol || 'TCP'}
-                      </text>
-                    </g>
-                  )}
-
-                  {/* Midpoint Label on hover/selection for normal edges: shifted below the line */}
-                  {!isSuspicious && (isHovered || isSelected) && (
-                    <g transform={`translate(${cx}, ${cy + 16})`}>
-                      <rect
-                        x="-26"
-                        y="-8"
-                        width="52"
-                        height="16"
-                        rx="4"
-                        fill="#070D20"
-                        stroke="#3B82F6"
-                        strokeWidth="0.9"
-                      />
-                      <text
-                        x="0"
-                        y="3.5"
+                        y="4"
                         textAnchor="middle"
                         fill="#94A3B8"
-                        fontSize="9"
+                        fontSize="9.5"
                         fontFamily="monospace"
                         fontWeight="bold"
                       >
@@ -437,7 +593,9 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
             })}
           </g>
 
-          {/* NODES */}
+          {/* ═════════════════════════════════════════════════════════════════
+              NODES LAYER WITH HIGH-CONTRAST SUPER-CLEAR IP BADGES
+          ═════════════════════════════════════════════════════════════════ */}
           <g className="nodes">
             {nodes.map((node) => {
               const isVisible = isNodeVisible(node);
@@ -445,22 +603,30 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               const isHovered = hoveredNodeId === node.id;
               const isSuspicious = node.isSuspicious;
 
-              // Distinct node color palette
+              // Visual Theme Palette per Node
               const strokeColor = isSelected
-                ? '#22D3EE'
+                ? '#00F0FF'
                 : isSuspicious
-                ? '#FF365D'
+                ? '#FF2E5B'
                 : node.type === 'firewall'
-                ? '#7C3AED'
-                : node.type === 'internet'
-                ? '#22D3EE'
-                : '#3B82F6';
+                ? '#A855F7'
+                : node.type === 'database'
+                ? '#FF2E5B'
+                : '#38BDF8';
 
               const fillColor = isSelected
                 ? '#082F49'
                 : isSuspicious
-                ? '#2D0A14'
-                : '#0B142B';
+                ? '#290611'
+                : '#070D22';
+
+              const ipTextColor = isSuspicious
+                ? '#FFA3B4'
+                : isSelected
+                ? '#67E8F9'
+                : node.type === 'firewall'
+                ? '#E9D5FF'
+                : '#67E8F9';
 
               return (
                 <g
@@ -470,63 +636,65 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
                   onMouseEnter={() => setHoveredNodeId(node.id)}
                   onMouseLeave={() => setHoveredNodeId(null)}
                   className={`cursor-pointer group transition-opacity duration-200 ${
-                    isVisible ? 'opacity-100' : 'opacity-20'
+                    isVisible ? 'opacity-100' : 'opacity-25'
                   }`}
                 >
-                  {/* Outer selection / warning halo ring */}
+                  {/* Outer selection / alert radar ring */}
                   {(isSelected || isSuspicious) && (
                     <circle
-                      r="32"
+                      r="34"
                       fill="none"
                       stroke={strokeColor}
-                      strokeWidth="1.5"
-                      strokeDasharray={isSelected ? '4 3' : undefined}
-                      opacity={isSuspicious ? 0.5 : 0.8}
+                      strokeWidth="1.6"
+                      strokeDasharray={isSelected ? '5 3' : undefined}
+                      opacity={isSuspicious ? 0.6 : 0.9}
+                      className={isSuspicious ? 'animate-ping' : ''}
                     />
                   )}
 
-                  {/* Node Base Circle */}
+                  {/* Node Main Circle Base */}
                   <circle
-                    r="24"
+                    r="25"
                     fill={fillColor}
                     stroke={strokeColor}
-                    strokeWidth={isSelected ? 2.8 : isHovered ? 2.5 : 2}
+                    strokeWidth={isSelected ? 3 : isHovered ? 2.8 : 2.2}
                     filter={isSelected ? 'url(#cyan-glow)' : isSuspicious ? 'url(#suspicious-glow)' : undefined}
+                    className="transition-all duration-200"
                   />
 
                   {/* Node Icon inside SVG foreignObject */}
                   <foreignObject x="-13" y="-13" width="26" height="26" className="pointer-events-none">
-                    <div className="w-full h-full flex items-center justify-center text-[#F1F5F9]">
+                    <div className="w-full h-full flex items-center justify-center">
                       <RenderNodeIcon
                         type={node.type}
                         className={`w-5 h-5 ${
                           isSuspicious
-                            ? 'text-[#FF365D]'
+                            ? 'text-[#FF2E5B]'
                             : isSelected
-                            ? 'text-[#22D3EE]'
+                            ? 'text-[#00F0FF]'
                             : node.type === 'firewall'
-                            ? '#A855F7'
-                            : 'text-[#94A3B8]'
+                            ? 'text-[#C084FC]'
+                            : 'text-[#38BDF8]'
                         }`}
                       />
                     </div>
                   </foreignObject>
 
-                  {/* Red accent dot badge for suspicious route participant */}
+                  {/* Red alert notification beacon on suspicious node */}
                   {isSuspicious && (
-                    <circle cx="16" cy="-16" r="5" fill="#FF365D" stroke="#050817" strokeWidth="1.2" />
+                    <circle cx="17" cy="-17" r="5.5" fill="#FF2E5B" stroke="#040818" strokeWidth="1.5" />
                   )}
 
-                  {/* 100% VISIBLE TEXT WITH CONTRAST HALO (Solves visibility and line collision) */}
+                  {/* Node Name Label (Clean, bold, non-overlapping) */}
                   <text
                     x="0"
-                    y="37"
+                    y="39"
                     textAnchor="middle"
-                    fill={isSelected ? '#22D3EE' : isSuspicious ? '#FDA4AF' : '#F1F5F9'}
+                    fill={isSelected ? '#67E8F9' : isSuspicious ? '#FDA4AF' : '#F8FAFC'}
                     fontSize="11.5"
                     fontFamily="Inter, sans-serif"
-                    fontWeight="600"
-                    stroke="#050817"
+                    fontWeight="700"
+                    stroke="#040818"
                     strokeWidth="3.5"
                     paintOrder="stroke fill"
                     strokeLinejoin="round"
@@ -534,38 +702,70 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
                   >
                     {node.name}
                   </text>
-                  <text
-                    x="0"
-                    y="50"
-                    textAnchor="middle"
-                    fill="#38BDF8"
-                    fontSize="10"
-                    fontFamily="monospace"
-                    fontWeight="600"
-                    stroke="#050817"
-                    strokeWidth="3"
-                    paintOrder="stroke fill"
-                    strokeLinejoin="round"
-                    className="pointer-events-none select-none"
-                  >
-                    {node.ip}
-                  </text>
+
+                  {/* ─────────────────────────────────────────────────────────
+                      HIGH-CONTRAST DEDICATED CYBER IP BADGE / HUD PILL
+                      (Ensures 100% crystal-clear visibility from any distance)
+                  ───────────────────────────────────────────────────────── */}
+                  <g transform="translate(0, 48)">
+                    {/* Dark contrast pill backdrop */}
+                    <rect
+                      x="-44"
+                      y="0"
+                      width="88"
+                      height="19"
+                      rx="5"
+                      fill="#030712"
+                      stroke={strokeColor}
+                      strokeWidth="1.3"
+                      strokeOpacity="0.9"
+                      className="shadow-lg"
+                    />
+                    {/* Inner subtle glow highlight */}
+                    <rect
+                      x="-42"
+                      y="2"
+                      width="84"
+                      height="15"
+                      rx="3"
+                      fill={strokeColor}
+                      fillOpacity="0.12"
+                    />
+                    {/* Crisp monospace IP text */}
+                    <text
+                      x="0"
+                      y="13.5"
+                      textAnchor="middle"
+                      fill={ipTextColor}
+                      fontSize="10.5"
+                      fontFamily="monospace"
+                      fontWeight="700"
+                      letterSpacing="0.04em"
+                      className="pointer-events-none select-none"
+                    >
+                      {node.ip}
+                    </text>
+                  </g>
                 </g>
               );
             })}
           </g>
         </svg>
 
-        {/* Floating Bottom Explanatory Banner */}
-        <div className="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between text-xs font-mono text-[#94A3B8] bg-[#070D20]/95 p-2.5 rounded-lg border border-[#202D50] backdrop-blur-sm pointer-events-none shadow-md">
+        {/* ─────────────────────────────────────────────────────────────
+            3. FLOATING BOTTOM ALERT & TELEMETRY BANNER
+        ───────────────────────────────────────────────────────────── */}
+        <div className="absolute bottom-3 left-4 right-4 flex flex-col sm:flex-row sm:items-center justify-between text-xs font-mono text-[#94A3B8] bg-[#070D20]/95 p-3 rounded-lg border border-[#202D50] backdrop-blur-md pointer-events-none shadow-2xl">
           <div className="flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#FF365D] animate-ping" />
-            <span className="text-[#FF365D] font-bold">BYPASS IDENTIFIED:</span>
-            <span className="text-[#F1F5F9]">
-              DMZ Web Server (10.0.1.10) ➔ Production DB (10.0.3.50) without Internal Firewall transit
+            <span className="text-[#FF365D] font-bold tracking-wide">BYPASS IDENTIFIED:</span>
+            <span className="text-[#F1F5F9] font-medium">
+              DMZ Web Server (<span className="text-[#00F0FF] font-bold">10.0.1.10</span>) ➔ Production DB (<span className="text-[#FF365D] font-bold">10.0.3.50</span>) without Internal Firewall transit
             </span>
           </div>
-          <span className="text-[#64748B] hidden md:inline">Click any node or route to inspect telemetry</span>
+          <span className="text-[#64748B] hidden lg:inline text-[11px] font-mono">
+            Click any node or route to inspect telemetry
+          </span>
         </div>
       </div>
     </div>

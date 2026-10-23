@@ -17,8 +17,8 @@ export const initialTopologyNodes: TopologyNode[] = [
     type: 'firewall',
     zone: 'EDGE',
     ip: '10.0.1.1',
-    x: 140,
-    y: 220,
+    x: 145,
+    y: 270,
     status: 'normal',
     activeSessions: 5120,
     os: 'PAN-OS 11.2 Edge Engine'
@@ -29,8 +29,8 @@ export const initialTopologyNodes: TopologyNode[] = [
     type: 'host',
     zone: 'DMZ',
     ip: '10.0.1.10',
-    x: 320,
-    y: 150,
+    x: 360,
+    y: 190,
     status: 'warning',
     isSuspicious: true,
     activeSessions: 420,
@@ -43,8 +43,8 @@ export const initialTopologyNodes: TopologyNode[] = [
     type: 'server',
     zone: 'INTERNAL',
     ip: '10.0.2.20',
-    x: 510,
-    y: 210,
+    x: 580,
+    y: 180,
     status: 'normal',
     activeSessions: 310,
     os: 'Spring Boot / Node Cluster'
@@ -55,8 +55,8 @@ export const initialTopologyNodes: TopologyNode[] = [
     type: 'host',
     zone: 'INTERNAL',
     ip: '10.0.2.99',
-    x: 510,
-    y: 300,
+    x: 580,
+    y: 360,
     status: 'normal',
     activeSessions: 12,
     os: 'Bastion Admin Jumphost'
@@ -67,8 +67,8 @@ export const initialTopologyNodes: TopologyNode[] = [
     type: 'firewall',
     zone: 'INTERNAL',
     ip: '10.0.2.1',
-    x: 690,
-    y: 220,
+    x: 740,
+    y: 270,
     status: 'normal',
     activeSessions: 7800,
     os: 'Core Stateful Security Gateway'
@@ -79,8 +79,8 @@ export const initialTopologyNodes: TopologyNode[] = [
     type: 'database',
     zone: 'DATA',
     ip: '10.0.3.50',
-    x: 880,
-    y: 220,
+    x: 900,
+    y: 270,
     status: 'suspicious',
     isSuspicious: true,
     activeSessions: 230,
@@ -318,12 +318,12 @@ export function buildTopologyFromBackend(network: NetworkModel): {
 
   // Non-overlapping coordinates matching Image 2 perfectly
   const KNOWN_COORDS: Record<string, { x: number; y: number }> = {
-    'fw-edge': { x: 140, y: 220 },
-    'dmz-web-01': { x: 320, y: 150 },
-    'app-server-01': { x: 510, y: 210 },
-    'jumpbox-admin': { x: 510, y: 300 },
-    'fw-core': { x: 690, y: 220 },
-    'db-prod-01': { x: 880, y: 220 },
+    'fw-edge': { x: 145, y: 270 },
+    'dmz-web-01': { x: 360, y: 190 },
+    'app-server-01': { x: 580, y: 180 },
+    'jumpbox-admin': { x: 580, y: 360 },
+    'fw-core': { x: 740, y: 270 },
+    'db-prod-01': { x: 900, y: 270 },
   };
 
   const zoneCounters: Record<string, number> = {};
