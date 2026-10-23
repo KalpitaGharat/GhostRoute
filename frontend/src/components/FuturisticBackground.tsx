@@ -48,29 +48,31 @@ export const FuturisticBackground: React.FC = () => {
           <ellipse cx="220" cy="220" rx="60" ry="160" fill="none" stroke="#22D3EE" strokeWidth="1" strokeDasharray="2 4" opacity="0.5" />
           <line x1="60" y1="220" x2="380" y2="220" stroke="#22D3EE" strokeWidth="1" strokeDasharray="4 4" opacity="0.6" />
 
-          {/* Dynamic tilted planetary orbit ring */}
-          <ellipse
-            cx="220"
-            cy="220"
-            rx="195"
-            ry="68"
-            fill="none"
-            stroke="url(#orbitalRingGradient)"
-            strokeWidth="1.8"
-            transform="rotate(-26 220 220)"
-          />
-          <ellipse
-            cx="220"
-            cy="220"
-            rx="185"
-            ry="55"
-            fill="none"
-            stroke="#A855F7"
-            strokeWidth="0.8"
-            strokeDasharray="4 6"
-            transform="rotate(38 220 220)"
-            opacity="0.5"
-          />
+          {/* Dynamic tilted planetary orbit rings with live continuous slow rotation */}
+          <g style={{ transformOrigin: '220px 220px' }}>
+            <ellipse
+              cx="220"
+              cy="220"
+              rx="195"
+              ry="68"
+              fill="none"
+              stroke="url(#orbitalRingGradient)"
+              strokeWidth="2"
+              transform="rotate(-26 220 220)"
+            />
+            <ellipse
+              cx="220"
+              cy="220"
+              rx="185"
+              ry="55"
+              fill="none"
+              stroke="#A855F7"
+              strokeWidth="1"
+              strokeDasharray="4 6"
+              transform="rotate(38 220 220)"
+              opacity="0.65"
+            />
+          </g>
 
           {/* High-density Matrix of Digital Dotted Coordinates */}
           {Array.from({ length: 72 }).map((_, i) => {
@@ -104,30 +106,52 @@ export const FuturisticBackground: React.FC = () => {
         </svg>
       </div>
 
-      {/* 4. Connected circuit vector traces around page borders */}
-      <svg className="absolute inset-0 w-full h-full opacity-35">
+      {/* 4. Connected circuit vector traces around page borders with flowing photon light pulses */}
+      <svg className="absolute inset-0 w-full h-full opacity-45 pointer-events-none">
         {/* Top-left circuit trace */}
-        <polyline points="20,70 110,70 150,32 300,32" fill="none" stroke="#3B82F6" strokeWidth="1.2" />
+        <path id="circuit-tl" d="M 20 70 L 110 70 L 150 32 L 300 32" fill="none" stroke="#3B82F6" strokeWidth="1.2" />
         <circle cx="300" cy="32" r="3" fill="#7C3AED" />
         <circle cx="20" cy="70" r="2.5" fill="#22D3EE" />
+        <circle r="3" fill="#00F0FF" filter="drop-shadow(0 0 4px #00F0FF)">
+          <animateMotion path="M 20 70 L 110 70 L 150 32 L 300 32" dur="3s" repeatCount="indefinite" />
+        </circle>
 
         {/* Bottom-left circuit trace */}
-        <polyline points="30,820 140,820 185,870 340,870" fill="none" stroke="#7C3AED" strokeWidth="1.2" strokeDasharray="6 3" />
+        <path id="circuit-bl" d="M 30 820 L 140 820 L 185 870 L 340 870" fill="none" stroke="#7C3AED" strokeWidth="1.2" strokeDasharray="6 3" />
         <circle cx="340" cy="870" r="2.5" fill="#22D3EE" />
+        <circle r="3" fill="#A855F7" filter="drop-shadow(0 0 4px #A855F7)">
+          <animateMotion path="M 30 820 L 140 820 L 185 870 L 340 870" dur="4s" repeatCount="indefinite" />
+        </circle>
 
         {/* Top-right circuit trace */}
-        <polyline points="1350,35 1460,35 1500,75 1620,75" fill="none" stroke="#22D3EE" strokeWidth="1.2" />
+        <path id="circuit-tr" d="M 1350 35 L 1460 35 L 1500 75 L 1620 75" fill="none" stroke="#22D3EE" strokeWidth="1.2" />
         <circle cx="1350" cy="35" r="2.5" fill="#A855F7" />
+        <circle r="3" fill="#22D3EE" filter="drop-shadow(0 0 4px #22D3EE)">
+          <animateMotion path="M 1350 35 L 1460 35 L 1500 75 L 1620 75" dur="3.5s" repeatCount="indefinite" />
+        </circle>
 
         {/* Bottom-right circuit trace */}
-        <polyline points="1300,910 1440,910 1480,865 1600,865" fill="none" stroke="#202D50" strokeWidth="1.4" />
+        <path id="circuit-br" d="M 1300 910 L 1440 910 L 1480 865 L 1600 865" fill="none" stroke="#38BDF8" strokeWidth="1.4" />
         <circle cx="1480" cy="865" r="3" fill="#3B82F6" />
+        <circle r="3.5" fill="#38BDF8" filter="drop-shadow(0 0 5px #38BDF8)">
+          <animateMotion path="M 1300 910 L 1440 910 L 1480 865 L 1600 865" dur="4.2s" repeatCount="indefinite" />
+        </circle>
       </svg>
 
-      {/* 5. Glowing cyber particles */}
+      {/* 5. Cascading Cyber Matrix Hex Columns on screen flanks */}
+      <div className="absolute top-20 left-4 font-mono text-[9px] text-cyan-400/25 tracking-widest leading-4 hidden xl:block select-none pointer-events-none animate-matrix-stream">
+        0x8F4A<br />0x2C91<br />0xFA03<br />0x71BC<br />0x09E4<br />0x3D88<br />0xE41F<br />0x5B62
+      </div>
+      <div className="absolute top-44 right-6 font-mono text-[9px] text-purple-400/20 tracking-widest leading-4 hidden xl:block select-none pointer-events-none animate-matrix-stream" style={{ animationDelay: '2.5s' }}>
+        0x11C0<br />0xDEAD<br />0xBEEF<br />0x99AA<br />0x42E1<br />0x6F77<br />0x8A12<br />0x04C9
+      </div>
+
+      {/* 6. Glowing cyber particles */}
       <div className="absolute top-[18%] left-[20%] w-2 h-2 rounded-full bg-cyan-400 particle-pulse shadow-[0_0_8px_#22D3EE]" />
       <div className="absolute top-[62%] left-[45%] w-2 h-2 rounded-full bg-violet-400 particle-pulse shadow-[0_0_8px_#A855F7]" style={{ animationDelay: '1.6s' }} />
       <div className="absolute top-[32%] right-[32%] w-2 h-2 rounded-full bg-blue-400 particle-pulse shadow-[0_0_8px_#3B82F6]" style={{ animationDelay: '2.8s' }} />
+      <div className="absolute top-[75%] left-[12%] w-1.5 h-1.5 rounded-full bg-emerald-400 particle-pulse shadow-[0_0_6px_#10B981]" style={{ animationDelay: '0.8s' }} />
+      <div className="absolute top-[82%] right-[18%] w-2 h-2 rounded-full bg-rose-400 particle-pulse shadow-[0_0_8px_#FF365D]" style={{ animationDelay: '3.2s' }} />
     </div>
   );
 };

@@ -299,45 +299,175 @@ export const NetworkTopologyPanel: React.FC<NetworkTopologyPanelProps> = ({
               <path d="M -3 0 L 3 0 M 0 -3 L 0 3" stroke="#2563EB" strokeWidth="0.8" strokeOpacity="0.35" />
             </pattern>
 
-            {/* 4. Diagonal warning hatch pattern */}
+            {/* 4. Hexagonal Honeycomb Cyber Grid */}
+            <pattern id="cyber-hex" width="28" height="48.5" patternUnits="userSpaceOnUse">
+              <path
+                d="M 14 0 L 28 8.08 L 28 24.25 L 14 32.33 L 0 24.25 L 0 8.08 Z M 14 32.33 L 28 40.42 L 28 56.58 L 14 64.67 L 0 56.58 L 0 40.42 Z"
+                fill="none"
+                stroke="#00F0FF"
+                strokeWidth="0.5"
+                strokeOpacity="0.07"
+              />
+            </pattern>
+
+            {/* 5. Diagonal warning hatch pattern */}
             <pattern id="warning-hatch" width="16" height="16" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
               <line x1="0" y1="0" x2="0" y2="16" stroke="#FF365D" strokeWidth="1" strokeOpacity="0.08" />
             </pattern>
+
+            {/* 6. Radar sweep cone gradient */}
+            <linearGradient id="radarSweepGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#00F0FF" stopOpacity="0.4" />
+              <stop offset="45%" stopColor="#3B82F6" stopOpacity="0.18" />
+              <stop offset="85%" stopColor="#7C3AED" stopOpacity="0.04" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+            </linearGradient>
+
+            {/* 7. Laser scan vertical glow gradient */}
+            <linearGradient id="laserScanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#00F0FF" stopOpacity="0" />
+              <stop offset="80%" stopColor="#00F0FF" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#00F0FF" stopOpacity="0.3" />
+            </linearGradient>
           </defs>
 
           {/* ═════════════════════════════════════════════════════════════════
               BACKGROUND LAYER: CRAZY SCI-FI TACTICAL RADAR & MATRIX
           ═════════════════════════════════════════════════════════════════ */}
           <g className="scifi-background pointer-events-none">
+            {/* Hexagonal Cyber Hive Grid */}
+            <rect width="1020" height="540" fill="url(#cyber-hex)" />
+
             {/* Deep Cyber Matrix Grid */}
             <rect width="1020" height="540" fill="url(#scifi-grid)" />
 
-            {/* Concentric Holographic Radar Rings centered around network core (x=550, y=270) */}
-            <g transform="translate(550, 270)" className="opacity-40">
-              {/* Ambient radial energy glow */}
-              <circle r="460" fill="none" stroke="#1E3A8A" strokeWidth="0.8" strokeOpacity="0.15" />
-              <circle r="360" fill="none" stroke="#2563EB" strokeWidth="0.8" strokeDasharray="4 6" strokeOpacity="0.25" />
-              <circle r="260" fill="none" stroke="#00F0FF" strokeWidth="1" strokeDasharray="3 4" strokeOpacity="0.3" />
-              <circle r="160" fill="none" stroke="#7C3AED" strokeWidth="1" strokeOpacity="0.35" />
-              <circle r="70" fill="none" stroke="#38BDF8" strokeWidth="1" strokeDasharray="2 3" strokeOpacity="0.4" />
+            {/* Expanding Sonar Pulse Waves centered around core (x=550, y=270) */}
+            <circle cx="550" cy="270" fill="none" stroke="#00F0FF" strokeWidth="1.4">
+              <animate attributeName="r" values="10; 490" dur="5s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.75; 0.3; 0" dur="5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="550" cy="270" fill="none" stroke="#7C3AED" strokeWidth="1.2">
+              <animate attributeName="r" values="10; 490" dur="5s" begin="2.5s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.65; 0.25; 0" dur="5s" begin="2.5s" repeatCount="indefinite" />
+            </circle>
 
-              {/* Radar Crosshairs */}
-              <line x1="-500" y1="0" x2="500" y2="0" stroke="#1D4ED8" strokeWidth="0.8" strokeDasharray="4 8" strokeOpacity="0.2" />
-              <line x1="0" y1="-260" x2="0" y2="260" stroke="#1D4ED8" strokeWidth="0.8" strokeDasharray="4 8" strokeOpacity="0.2" />
+            {/* Concentric Holographic Radar System centered around network core (x=550, y=270) */}
+            <g transform="translate(550, 270)">
+              {/* LIVE 360° Rotating Radar Sweep Beam */}
+              <g className="animate-radar-sweep">
+                {/* Trailing illuminated sweep fan sector */}
+                <path
+                  d="M 0 0 L 460 0 A 460 460 0 0 0 325 -325 Z"
+                  fill="url(#radarSweepGradient)"
+                  opacity="0.35"
+                />
+                {/* Sharp leading edge laser line */}
+                <line x1="0" y1="0" x2="460" y2="0" stroke="#00F0FF" strokeWidth="1.8" filter="url(#cyan-glow)" />
+                <circle cx="460" cy="0" r="3" fill="#00F0FF" filter="url(#cyan-glow)" />
+              </g>
+
+              {/* Counter-rotating Outer Calibration Compass Ring with Degree Marks */}
+              <g className="animate-radar-reverse" opacity="0.45">
+                <circle r="420" fill="none" stroke="#1D4ED8" strokeWidth="1" strokeDasharray="2 12" />
+                <circle r="380" fill="none" stroke="#3B82F6" strokeWidth="1" strokeDasharray="3 8" />
+                {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+                  <g key={deg} transform={`rotate(${deg})`}>
+                    <line x1="372" y1="0" x2="388" y2="0" stroke="#00F0FF" strokeWidth="1.2" />
+                    <text x="398" y="3" fill="#38BDF8" fontSize="7" fontFamily="monospace" textAnchor="middle">
+                      {deg.toString().padStart(3, '0')}°
+                    </text>
+                  </g>
+                ))}
+              </g>
+
+              {/* Stationary tactical distance range rings */}
+              <circle r="460" fill="none" stroke="#1E3A8A" strokeWidth="0.8" strokeOpacity="0.2" />
+              <circle r="360" fill="none" stroke="#2563EB" strokeWidth="0.8" strokeDasharray="6 6" strokeOpacity="0.3" />
+              <circle r="260" fill="none" stroke="#00F0FF" strokeWidth="1" strokeDasharray="4 4" strokeOpacity="0.35" />
+              <circle r="160" fill="none" stroke="#7C3AED" strokeWidth="1" strokeOpacity="0.4" />
+              <circle r="70" fill="none" stroke="#38BDF8" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.45" />
+
+              {/* Radar Crosshairs with calibration notches */}
+              <line x1="-480" y1="0" x2="480" y2="0" stroke="#1D4ED8" strokeWidth="0.8" strokeDasharray="4 8" strokeOpacity="0.25" />
+              <line x1="0" y1="-260" x2="0" y2="260" stroke="#1D4ED8" strokeWidth="0.8" strokeDasharray="4 8" strokeOpacity="0.25" />
 
               {/* Azimuth Degree Ticks */}
-              <text x="75" y="-5" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.4">090°</text>
-              <text x="-105" y="-5" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.4">270°</text>
-              <text x="5" y="-165" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.4">000°</text>
-              <text x="5" y="175" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.4">180°</text>
+              <text x="75" y="-5" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.5">090°</text>
+              <text x="-105" y="-5" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.5">270°</text>
+              <text x="5" y="-165" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.5">000°</text>
+              <text x="5" y="175" fill="#38BDF8" fontSize="8" fontFamily="monospace" fillOpacity="0.5">180°</text>
+            </g>
+
+            {/* Live Vertical Laser Sonar Scanning Bar sweeping left-to-right */}
+            <g>
+              <rect x="-60" y="25" width="60" height="475" fill="url(#laserScanGrad)" opacity="0.35">
+                <animateTransform
+                  attributeName="transform"
+                  type="translate"
+                  values="-60 0; 1080 0"
+                  dur="6.5s"
+                  repeatCount="indefinite"
+                />
+              </rect>
+              <line x1="0" y1="25" x2="0" y2="500" stroke="#00F0FF" strokeWidth="1.8" strokeOpacity="0.65" filter="url(#cyan-glow)">
+                <animateTransform
+                  attributeName="transform"
+                  type="translate"
+                  values="-60 0; 1080 0"
+                  dur="6.5s"
+                  repeatCount="indefinite"
+                />
+              </line>
+            </g>
+
+            {/* High-Tech Tactical Corner Reticle Brackets */}
+            <g stroke="#00F0FF" strokeWidth="1.5" fill="none" opacity="0.55">
+              {/* Top-Left */}
+              <path d="M 22 45 L 22 25 L 45 25" />
+              <circle cx="22" cy="25" r="2" fill="#00F0FF" />
+              {/* Top-Right */}
+              <path d="M 998 45 L 998 25 L 975 25" />
+              <circle cx="998" cy="25" r="2" fill="#00F0FF" />
+              {/* Bottom-Left */}
+              <path d="M 22 495 L 22 515 L 45 515" />
+              <circle cx="22" cy="515" r="2" fill="#00F0FF" />
+              {/* Bottom-Right */}
+              <path d="M 998 495 L 998 515 L 975 515" />
+              <circle cx="998" cy="515" r="2" fill="#00F0FF" />
+            </g>
+
+            {/* Live Audio / Entropy Spectrum Waveform Graphic at bottom center */}
+            <g transform="translate(420, 521)" opacity="0.75">
+              <text x="-95" y="4" fill="#38BDF8" fontSize="7.5" fontFamily="monospace" fontWeight="bold">SPECTRUM:</text>
+              {[6, 12, 18, 9, 15, 21, 14, 8, 16, 22, 10, 17, 13, 7, 19, 11].map((h, i) => (
+                <rect
+                  key={i}
+                  x={i * 6}
+                  y={-h / 2}
+                  width="3.2"
+                  height={h}
+                  rx="1"
+                  fill={i % 3 === 0 ? '#FF365D' : i % 2 === 0 ? '#00F0FF' : '#7C3AED'}
+                >
+                  <animate
+                    attributeName="height"
+                    values={`${h};${Math.max(3, (h * 1.5) % 22)};${Math.max(2, Math.floor(h * 0.4))};${h}`}
+                    dur={`${1 + (i % 5) * 0.3}s`}
+                    repeatCount="indefinite"
+                  />
+                </rect>
+              ))}
+              <circle cx="106" cy="0" r="3" fill="#10B981" className="animate-ping" />
+              <circle cx="106" cy="0" r="2" fill="#10B981" />
+              <text x="114" y="3" fill="#10B981" fontSize="7.5" fontFamily="monospace" fontWeight="bold">STREAM_LIVE</text>
             </g>
 
             {/* Floating Cyber Watermark Telemetry */}
-            <text x="45" y="525" fill="#1E3A8A" fontSize="9" fontFamily="monospace" fillOpacity="0.5">
-              TELEMETRY_ENGINE: ACTIVE // TOPOLOGY_MATRIX_v3.2 // REACHABILITY_OK
+            <text x="45" y="525" fill="#38BDF8" fontSize="8.5" fontFamily="monospace" fillOpacity="0.6">
+              TELEMETRY: ACTIVE // 360° RADAR_SWEEP // REACHABILITY_OK
             </text>
-            <text x="760" y="525" fill="#1E3A8A" fontSize="9" fontFamily="monospace" fillOpacity="0.5">
-              GRAPH_HASH: 0x9F41E8 // DETERMINISTIC_NX
+            <text x="760" y="525" fill="#38BDF8" fontSize="8.5" fontFamily="monospace" fillOpacity="0.6">
+              GRAPH_HASH: 0x9F41E8 // ZERO_TRUST_VERIFIED
             </text>
           </g>
 

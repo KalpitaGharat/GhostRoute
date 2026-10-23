@@ -121,3 +121,55 @@
 .particle-pulse {
   animation: floatParticle 4s ease-in-out infinite;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   CRAZY CYBER HUD & RADAR KEYFRAMES
+═══════════════════════════════════════════════════════════════ */
+@keyframes radarSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes reverseRadarSweep {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes matrixDrift {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.6;
+  }
+  70% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(120px);
+    opacity: 0;
+  }
+}
+
+.animate-radar-sweep {
+  transform-origin: 550px 270px;
+  animation: radarSweep 7.5s linear infinite;
+}
+
+.animate-radar-reverse {
+  transform-origin: 550px 270px;
+  animation: reverseRadarSweep 28s linear infinite;
+}
+
+.animate-matrix-stream {
+  animation: matrixDrift 5s linear infinite;
+}
