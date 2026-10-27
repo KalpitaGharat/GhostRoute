@@ -577,6 +577,23 @@ export const AgentWorkflowModal: React.FC<AgentWorkflowModalProps> = ({
 
                   {enrichment && (
                     <div className="space-y-2.5 text-xs font-sans">
+                      {/* Offline Fallback Notice */}
+                      {enrichment.status === 'DEMO_FALLBACK' && (
+                        <div className="p-2 rounded-lg bg-amber-950/30 border border-amber-500/40 text-[11px] font-mono text-amber-200">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-amber-300">Offline Fallback Mode Active</span>
+                            {enrichment.error_category && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-900/60 text-amber-300 border border-amber-500/30">
+                                {enrichment.error_category}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-amber-200/90 leading-tight">
+                            {enrichment.error || 'Live NVIDIA Nemotron copilot was unavailable. Displaying deterministic reachability graph forensics.'}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Executive Summary */}
                       {enrichment.executive_summary && (
                         <div className="p-2.5 rounded-lg bg-[#101B35] border border-[#202D50] text-[#F1F5F9] leading-relaxed">
@@ -584,6 +601,7 @@ export const AgentWorkflowModal: React.FC<AgentWorkflowModalProps> = ({
                           {enrichment.executive_summary}
                         </div>
                       )}
+
 
                       {/* Threat Assessment & Exposure */}
                       {enrichment.threat_assessment && (
@@ -627,13 +645,20 @@ export const AgentWorkflowModal: React.FC<AgentWorkflowModalProps> = ({
 
                       {/* Confidence & Limitations */}
                       <div className="flex items-start justify-between gap-2 pt-1 border-t border-[#202D50]/60 text-[10px] font-mono text-[#64748B]">
-                        <span>Confidence: <strong className="text-emerald-400">{enrichment.confidence !== null && enrichment.confidence !== undefined ? `${(enrichment.confidence * 100).toFixed(0)}%` : '90%'}</strong> (Topology-derived)</span>
+                        <span>
+                          {enrichment.status === 'DEMO_FALLBACK' ? (
+                            <>Analysis: <strong className="text-amber-400">Deterministic Path Proof</strong> (NetworkX)</>
+                          ) : (
+                            <>Model Confidence: <strong className="text-emerald-400">{enrichment.confidence !== null && enrichment.confidence !== undefined ? `${(enrichment.confidence * 100).toFixed(0)}%` : 'Evaluated'}</strong> (Nemotron)</>
+                          )}
+                        </span>
                         {enrichment.limitations && enrichment.limitations.length > 0 && (
                           <span className="truncate max-w-[280px]" title={enrichment.limitations.join('; ')}>
                             Note: {enrichment.limitations[0]}
                           </span>
                         )}
                       </div>
+
                     </div>
                   )}
 

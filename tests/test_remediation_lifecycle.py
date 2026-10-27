@@ -10,7 +10,9 @@ Covers:
 
 import json
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
+
 
 from backend.main import app
 from backend.schemas import (
@@ -41,15 +43,17 @@ def sample_network() -> NetworkModel:
 
 def test_remediation_lifecycle_states(sample_network: NetworkModel):
     """Verify that remediation proposals traverse PROPOSED -> SIMULATED -> VERIFIED."""
-    workflow = run_full_investigation_workflow(sample_network)
-    assert workflow.status == "COMPLETED"
-    assert workflow.explanation is not None
+    with patch("backend.agent.get_nvidia_client", return_value=None):
+        workflow = run_full_investigation_workflow(sample_network)
+        assert workflow.status == "COMPLETED"
+        assert workflow.explanation is not None
 
-    proposal = workflow.explanation.proposed_remediation
-    # After successful simulation and verification (verdict PASS), status must be VERIFIED
-    assert proposal.status == RemediationStatus.VERIFIED
-    assert workflow.verification is not None
-    assert workflow.verification.verdict == "PASS"
+        proposal = workflow.explanation.proposed_remediation
+        # After successful simulation and verification (verdict PASS), status must be VERIFIED
+        assert proposal.status == RemediationStatus.VERIFIED
+        assert workflow.verification is not None
+        assert workflow.verification.verdict == "PASS"
+
 
 
 def test_failed_verification_cannot_be_verified(sample_network: NetworkModel):

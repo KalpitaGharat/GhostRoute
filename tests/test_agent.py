@@ -111,18 +111,20 @@ def test_mocked_nemotron_malformed_response_fallback(sample_finding: AnalysisFin
 
 def test_full_agent_workflow_end_to_end(sample_network: NetworkModel):
     """Verify that the full agent investigation workflow executes successfully end-to-end."""
-    workflow_res = run_full_investigation_workflow(sample_network)
+    with patch("backend.agent.get_nvidia_client", return_value=None):
+        workflow_res = run_full_investigation_workflow(sample_network)
 
-    assert workflow_res.total_findings >= 1
-    assert workflow_res.selected_finding is not None
-    assert workflow_res.explanation is not None
-    assert workflow_res.simulation is not None
-    assert workflow_res.verification is not None
+        assert workflow_res.total_findings >= 1
+        assert workflow_res.selected_finding is not None
+        assert workflow_res.explanation is not None
+        assert workflow_res.simulation is not None
+        assert workflow_res.verification is not None
 
-    # Verification of our sample network with the disabled rule must PASS
-    assert workflow_res.verification.verdict == "PASS"
-    assert workflow_res.status == "COMPLETED"
-    assert len(workflow_res.steps) == 4
+        # Verification of our sample network with the disabled rule must PASS
+        assert workflow_res.verification.verdict == "PASS"
+        assert workflow_res.status == "COMPLETED"
+        assert len(workflow_res.steps) == 4
+
 
 
 def test_agent_workflow_clean_network():

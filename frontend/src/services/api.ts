@@ -159,6 +159,7 @@ export interface ExplainResponse {
   model_used: string;
   status: 'ANALYZED_LLM' | 'DEMO_FALLBACK' | 'ERROR';
   error?: string | null;
+  error_category?: string | null;
 }
 
 export type EnrichmentStatus = 'PENDING' | 'ANALYZED_LLM' | 'DEMO_FALLBACK' | 'ERROR';
@@ -176,6 +177,7 @@ export interface FindingEnrichment {
   confidence?: number | null;
   limitations: string[];
   error?: string | null;
+  error_category?: string | null;
   timestamp: string;
   cached: boolean;
 }
@@ -187,7 +189,11 @@ export interface AiHealthResponse {
   base_url: string;
   has_api_key: boolean;
   live_inference_ready: boolean;
+  last_verified_at?: string | null;
+  last_error?: string | null;
+  last_error_category?: string | null;
 }
+
 
 export interface CorrelationResponse {
   related_findings: string[];
@@ -375,9 +381,11 @@ export function getAuditHistory(limit = 50): Promise<AuditRecord[]> {
 /**
  * GET /ai/health — report provider readiness and model
  */
-export function getAiHealth(): Promise<AiHealthResponse> {
-  return apiFetch<AiHealthResponse>('/ai/health');
+export function getAiHealth(checkLive = false): Promise<AiHealthResponse> {
+  const query = checkLive ? '?check_live=true' : '';
+  return apiFetch<AiHealthResponse>(`/ai/health${query}`);
 }
+
 
 /**
  * POST /findings/{finding_id}/enrichment — request asynchronous Nemotron threat enrichment

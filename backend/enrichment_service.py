@@ -17,7 +17,16 @@ import hashlib
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 
-from backend.agent import get_nvidia_client, get_configured_model
+from openai import (
+    AuthenticationError,
+    RateLimitError,
+    NotFoundError,
+    APITimeoutError,
+    APIConnectionError,
+    APIStatusError
+)
+
+from backend.agent import get_nvidia_client, get_configured_model, redact_secrets
 from backend.schemas import (
     AnalysisFinding,
     FindingEnrichment,
@@ -36,6 +45,28 @@ _SEMAPHORE = asyncio.Semaphore(3)
 _ENRICHMENT_CACHE: Dict[str, tuple[str, FindingEnrichment]] = {}
 _INFLIGHT_TASKS: Dict[str, asyncio.Task] = {}
 
+# Live health tracking state across service lifecycle
+_LAST_LIVE_SUCCESS_AT: Optional[str] = None
+_LAST_LIVE_FAILURE_AT: Optional[str] = None
+_LAST_LIVE_ERROR_MESSAGE: Optional[str] = None
+_LAST_LIVE_ERROR_CATEGORY: Optional[str] = None
+
+
+def _record_live_success() -> None:
+    """Record that a live inference call succeeded."""
+    global _LAST_LIVE_SUCCESS_AT, _LAST_LIVE_ERROR_MESSAGE, _LAST_LIVE_ERROR_CATEGORY
+    _LAST_LIVE_SUCCESS_AT = datetime.now(timezone.utc).isoformat()
+    _LAST_LIVE_ERROR_MESSAGE = None
+    _LAST_LIVE_ERROR_CATEGORY = None
+
+
+def _record_live_failure(error_msg: str, category: str) -> None:
+    """Record that a live inference call failed."""
+    global _LAST_LIVE_FAILURE_AT, _LAST_LIVE_ERROR_MESSAGE, _LAST_LIVE_ERROR_CATEGORY
+    _LAST_LIVE_FAILURE_AT = datetime.now(timezone.utc).isoformat()
+    _LAST_LIVE_ERROR_MESSAGE = redact_secrets(error_msg)
+    _LAST_LIVE_ERROR_CATEGORY = category
+
 
 def compute_finding_hash(finding: AnalysisFinding) -> str:
     """Compute a deterministic hash of finding attributes for cache validation."""
@@ -43,30 +74,85 @@ def compute_finding_hash(finding: AnalysisFinding) -> str:
     return hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
 
 
-def get_ai_health() -> AiHealthResponse:
-    """Report AI provider readiness, model selection, and configuration without leaking credentials."""
+def get_ai_health(check_live: bool = False) -> AiHealthResponse:
+    """Report AI provider readiness, model selection, and configuration without leaking credentials.
+    
+    Distinguishes:
+    - CONFIGURATION_MISSING: No valid API key configured
+    - CONFIGURED_UNTESTED: Key present but no live calls completed yet
+    - LIVE_VERIFIED: Real model inference verified
+    - LIVE_FAILING: API call failed with diagnostic category
+    """
     api_key = os.getenv("NVIDIA_API_KEY", "")
     has_key = bool(api_key.strip() and "placeholder" not in api_key.lower())
     base_url = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
     model = get_configured_model()
 
-    client = get_nvidia_client()
-    live_ready = client is not None
+    if not has_key:
+        return AiHealthResponse(
+            status="CONFIGURATION_MISSING",
+            provider="NVIDIA NIM (OpenAI-compatible)",
+            configured_model=model,
+            base_url=base_url,
+            has_api_key=False,
+            live_inference_ready=False,
+            last_error="NVIDIA_API_KEY is not configured or contains placeholder.",
+            last_error_category="CONFIGURATION_MISSING"
+        )
+
+    # Optional bounded live connectivity test
+    if check_live:
+        client = get_nvidia_client()
+        if client:
+            try:
+                # 5-second bounded shallow ping
+                client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "user", "content": "ping"}],
+                    max_tokens=1,
+                    timeout=5.0
+                )
+                _record_live_success()
+            except Exception as exc:
+                cat = "CONNECTION_ERROR" if isinstance(exc, APIConnectionError) else "AUTHENTICATION_ERROR" if isinstance(exc, AuthenticationError) else "API_ERROR"
+                _record_live_failure(str(exc), cat)
+
+    # Evaluate current truthful health status
+    if _LAST_LIVE_SUCCESS_AT and (not _LAST_LIVE_FAILURE_AT or _LAST_LIVE_SUCCESS_AT >= _LAST_LIVE_FAILURE_AT):
+        status = "LIVE_VERIFIED"
+        live_ready = True
+    elif _LAST_LIVE_FAILURE_AT:
+        status = "LIVE_FAILING"
+        live_ready = False
+    else:
+        status = "CONFIGURED_UNTESTED"
+        live_ready = False
 
     return AiHealthResponse(
-        status="READY" if live_ready else "OFFLINE_FALLBACK_ACTIVE",
+        status=status,
         provider="NVIDIA NIM (OpenAI-compatible)",
         configured_model=model,
         base_url=base_url,
-        has_api_key=has_key,
-        live_inference_ready=live_ready
+        has_api_key=True,
+        live_inference_ready=live_ready,
+        last_verified_at=_LAST_LIVE_SUCCESS_AT,
+        last_error=_LAST_LIVE_ERROR_MESSAGE,
+        last_error_category=_LAST_LIVE_ERROR_CATEGORY
     )
 
 
-def generate_fallback_enrichment(finding: AnalysisFinding, error_msg: Optional[str] = None) -> FindingEnrichment:
-    """Generate deterministic, labeled threat forensics for offline demo mode or error recovery."""
+def generate_fallback_enrichment(
+    finding: AnalysisFinding,
+    error_msg: Optional[str] = None,
+    error_category: Optional[str] = None
+) -> FindingEnrichment:
+    """Generate deterministic, labeled threat forensics for offline demo mode or error recovery.
+    
+    IMPORTANT: confidence is None for fallback to prevent misleading claims of measured model accuracy.
+    """
     rules_str = ", ".join(finding.supporting_rule_ids) if finding.supporting_rule_ids else "unspecified access rule"
     path_str = " -> ".join(finding.discovered_path)
+    safe_error = redact_secrets(error_msg) if error_msg else None
 
     return FindingEnrichment(
         finding_id=finding.id,
@@ -81,7 +167,7 @@ def generate_fallback_enrichment(finding: AnalysisFinding, error_msg: Optional[s
             f"core internal assets on {finding.protocol}:{finding.port or 'any'}. This enables lateral movement or data exfiltration."
         ),
         evidence_based_reasoning=(
-            f"Reachability is confirmed by topology graph analysis. Firewall rule(s) {rules_str} lack restrictive "
+            f"Reachability is confirmed by deterministic NetworkX topology graph analysis. Firewall rule(s) {rules_str} lack restrictive "
             f"source/destination zone constraints, permitting transit across network boundaries."
         ),
         attack_path_explanation=(
@@ -99,14 +185,16 @@ def generate_fallback_enrichment(finding: AnalysisFinding, error_msg: Optional[s
             f"Enforce strict source IP/zone filtering between {finding.source} and {finding.destination}.",
             "Verify legitimate service connectivity with independent access policies."
         ],
-        confidence=0.95,
+        confidence=None,  # Do not invent 95% LLM confidence for deterministic graph fallback
         limitations=[
             "Generated using deterministic graph topology; live packet payloads and host-based endpoint telemetry were not inspected.",
-            "NVIDIA Nemotron offline demo fallback mode is active."
+            f"NVIDIA Nemotron offline demo fallback active: {safe_error or 'Provider call unavailable.'}"
         ],
-        error=error_msg,
+        error=safe_error,
+        error_category=error_category or "OFFLINE_FALLBACK",
         cached=False
     )
+
 
 
 def _call_nemotron_sync(finding: AnalysisFinding, network_summary: Optional[Dict[str, Any]] = None) -> FindingEnrichment:
@@ -160,19 +248,24 @@ def _call_nemotron_sync(finding: AnalysisFinding, network_summary: Optional[Dict
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.2,
-            max_tokens=4096
+            max_tokens=8192
         )
 
         content = response.choices[0].message.content or ""
         if not content.strip() and hasattr(response.choices[0].message, "reasoning_content"):
-            content = getattr(response.choices[0].message, "reasoning_content") or ""
+            rc = getattr(response.choices[0].message, "reasoning_content") or ""
+            if "```json" in rc:
+                # Use the last json block (final output) rather than the prompt template
+                content = rc.split("```json")[-1].split("```")[0].strip()
+            else:
+                content = rc
         cleaned = content.strip()
 
         # Extract JSON content
         if "```json" in cleaned:
-            cleaned = cleaned.split("```json", 1)[1].split("```", 1)[0].strip()
+            cleaned = cleaned.split("```json")[-1].split("```")[0].strip()
         elif "```" in cleaned:
-            cleaned = cleaned.split("```", 1)[1].split("```", 1)[0].strip()
+            cleaned = cleaned.split("```")[-1].split("```")[0].strip()
         elif "{" in cleaned and "}" in cleaned:
             start_idx = cleaned.find("{")
             end_idx = cleaned.rfind("}") + 1
@@ -187,6 +280,9 @@ def _call_nemotron_sync(finding: AnalysisFinding, network_summary: Optional[Dict
         except (ValueError, TypeError):
             confidence = 0.85
 
+        # Live inference successfully generated and validated
+        _record_live_success()
+
         return FindingEnrichment(
             finding_id=finding.id,
             status=EnrichmentStatus.ANALYZED_LLM,
@@ -200,12 +296,58 @@ def _call_nemotron_sync(finding: AnalysisFinding, network_summary: Optional[Dict
             confidence=confidence,
             limitations=[str(l) for l in data.get("limitations", []) if isinstance(l, str)],
             error=None,
+            error_category=None,
             cached=False
         )
 
+    except AuthenticationError as auth_err:
+        safe_msg = "Invalid or expired NVIDIA API key (HTTP 401). Please check NVIDIA_API_KEY."
+        logger.error("Nemotron enrichment auth failure [stage: chat_completion]: %s", safe_msg)
+        _record_live_failure(safe_msg, "AUTHENTICATION_ERROR")
+        return generate_fallback_enrichment(finding, error_msg=safe_msg, error_category="AUTHENTICATION_ERROR")
+
+    except RateLimitError as rate_err:
+        safe_msg = "NVIDIA NIM rate limit or credit quota reached (HTTP 429). Please verify account credits."
+        logger.warning("Nemotron enrichment rate limit [stage: chat_completion]: %s", safe_msg)
+        _record_live_failure(safe_msg, "RATE_LIMIT_ERROR")
+        return generate_fallback_enrichment(finding, error_msg=safe_msg, error_category="RATE_LIMIT_ERROR")
+
+    except NotFoundError as nf_err:
+        safe_msg = f"Configured model '{model}' not found on NVIDIA NIM endpoint (HTTP 404)."
+        logger.error("Nemotron enrichment model missing [stage: chat_completion]: %s", safe_msg)
+        _record_live_failure(safe_msg, "MODEL_NOT_FOUND_ERROR")
+        return generate_fallback_enrichment(finding, error_msg=safe_msg, error_category="MODEL_NOT_FOUND_ERROR")
+
+    except APITimeoutError as timeout_err:
+        safe_msg = "NVIDIA NIM inference request timed out. Model reasoning took longer than configured limit."
+        logger.warning("Nemotron enrichment timeout [stage: chat_completion]: %s", safe_msg)
+        _record_live_failure(safe_msg, "TIMEOUT_ERROR")
+        return generate_fallback_enrichment(finding, error_msg=safe_msg, error_category="TIMEOUT_ERROR")
+
+    except APIConnectionError as conn_err:
+        safe_msg = f"Network connection error reaching NVIDIA NIM endpoint at {client.base_url}."
+        logger.warning("Nemotron enrichment connection error [stage: network_connect]: %s", safe_msg)
+        _record_live_failure(safe_msg, "CONNECTION_ERROR")
+        return generate_fallback_enrichment(finding, error_msg=safe_msg, error_category="CONNECTION_ERROR")
+
+    except APIStatusError as status_err:
+        code = getattr(status_err, "status_code", "unknown")
+        safe_msg = f"NVIDIA NIM API returned error status HTTP {code}."
+        logger.warning("Nemotron enrichment API status error [stage: chat_completion, code: %s]: %s", code, safe_msg)
+        _record_live_failure(safe_msg, "API_STATUS_ERROR")
+        return generate_fallback_enrichment(finding, error_msg=safe_msg, error_category="API_STATUS_ERROR")
+
+    except json.JSONDecodeError as json_err:
+        safe_msg = f"Nemotron response format error: Unterminated or invalid JSON ({json_err.msg})."
+        logger.warning("Nemotron enrichment JSON decode failure [stage: response_parsing]: %s", safe_msg)
+        _record_live_failure(safe_msg, "JSON_DECODE_ERROR")
+        return generate_fallback_enrichment(finding, error_msg=safe_msg, error_category="JSON_DECODE_ERROR")
+
     except Exception as exc:
-        logger.warning(f"Live Nemotron enrichment failed ({type(exc).__name__}): {exc}. Falling back to deterministic enrichment.")
-        return generate_fallback_enrichment(finding, error_msg=f"Provider call failed ({type(exc).__name__}). Using deterministic enrichment.")
+        safe_msg = f"Nemotron enrichment failed ({type(exc).__name__}): {redact_secrets(str(exc))}"
+        logger.warning("Nemotron enrichment unexpected error [stage: pipeline]: %s", safe_msg)
+        _record_live_failure(safe_msg, "UNEXPECTED_ERROR")
+        return generate_fallback_enrichment(finding, error_msg=safe_msg, error_category="UNEXPECTED_ERROR")
 
 
 async def enrich_finding_async(
@@ -215,6 +357,10 @@ async def enrich_finding_async(
 ) -> FindingEnrichment:
     """Asynchronously enrich a network finding with in-flight deduplication and caching."""
     finding_hash = compute_finding_hash(finding)
+
+    # Invalidate cache if fresh evaluation requested
+    if refresh:
+        _ENRICHMENT_CACHE.pop(finding.id, None)
 
     # 1. Check cache (unless refresh requested)
     if not refresh and finding.id in _ENRICHMENT_CACHE:
@@ -233,7 +379,9 @@ async def enrich_finding_async(
         async with _SEMAPHORE:
             # Run blocking OpenAI call in thread pool to avoid blocking asyncio loop
             result = await asyncio.to_thread(_call_nemotron_sync, finding, network_summary)
-            _ENRICHMENT_CACHE[finding.id] = (finding_hash, result)
+            # Only cache verified live inferences; never poison cache with transient fallbacks
+            if result.status == EnrichmentStatus.ANALYZED_LLM:
+                _ENRICHMENT_CACHE[finding.id] = (finding_hash, result)
             return result
 
     task = asyncio.create_task(_worker())
@@ -243,6 +391,7 @@ async def enrich_finding_async(
         return await task
     finally:
         _INFLIGHT_TASKS.pop(finding.id, None)
+
 
 
 def get_cached_enrichment(finding_id: str) -> Optional[FindingEnrichment]:

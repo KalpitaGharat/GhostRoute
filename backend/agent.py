@@ -15,13 +15,16 @@ import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
+import re
 from openai import (
     OpenAI,
     OpenAIError,
     APITimeoutError,
     APIConnectionError,
     RateLimitError,
-    APIStatusError
+    APIStatusError,
+    AuthenticationError,
+    NotFoundError
 )
 
 from backend.schemas import (
@@ -42,16 +45,28 @@ from backend.graph_adapter import get_active_graph_engine
 from backend.remediation import simulate_network_fix, validate_remediation_proposal, RemediationValidationError
 from backend.verification import verify_simulated_network
 
-# Load environment configuration (checking backend/.env, root .env, then system env)
+# Load environment configuration predictably:
+# Precedence:
+# 1. Existing System/Deployment Environment Variables (never overwritten by .env files)
+# 2. backend/.env (backend-specific environment configuration)
+# 3. Root .env (monorepo fallback defaults)
 _backend_env = Path(__file__).resolve().parent / ".env"
 _root_env = Path(__file__).resolve().parent.parent / ".env"
 if _backend_env.exists():
-    load_dotenv(_backend_env, override=True)
+    load_dotenv(_backend_env, override=False)
 if _root_env.exists():
-    load_dotenv(_root_env, override=True)
-load_dotenv(override=False)
+    load_dotenv(_root_env, override=False)
 
 logger = logging.getLogger("ghostroute.agent")
+
+
+def redact_secrets(text: Optional[str]) -> str:
+    """Sanitize API keys, tokens, and authorization headers from diagnostic logs and error strings."""
+    if not text:
+        return ""
+    cleaned = re.sub(r'nvapi-[A-Za-z0-9_-]+', '[REDACTED_API_KEY]', text)
+    cleaned = re.sub(r'Bearer\s+[A-Za-z0-9_\-\.]+', 'Bearer [REDACTED]', cleaned, flags=re.IGNORECASE)
+    return cleaned
 
 
 def get_nvidia_client() -> Optional[OpenAI]:
@@ -62,9 +77,9 @@ def get_nvidia_client() -> Optional[OpenAI]:
 
     base_url = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
     try:
-        timeout_seconds = float(os.getenv("NVIDIA_TIMEOUT", "30.0"))
+        timeout_seconds = float(os.getenv("NVIDIA_TIMEOUT", "120.0"))
     except (ValueError, TypeError):
-        timeout_seconds = 30.0
+        timeout_seconds = 120.0
 
     return OpenAI(base_url=base_url, api_key=api_key.strip(), timeout=timeout_seconds)
 
@@ -74,7 +89,11 @@ def get_configured_model() -> str:
     return os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b")
 
 
-def generate_demo_fallback_explanation(finding: AnalysisFinding) -> ExplainResponse:
+def generate_demo_fallback_explanation(
+    finding: AnalysisFinding,
+    error_msg: Optional[str] = None,
+    error_category: Optional[str] = None
+) -> ExplainResponse:
     """Generate an explicitly labeled, deterministic fallback explanation for demo/offline use.
     
     CRITICAL: status is strictly set to 'DEMO_FALLBACK' to ensure complete transparency.
@@ -98,6 +117,7 @@ def generate_demo_fallback_explanation(finding: AnalysisFinding) -> ExplainRespo
         )
     )
 
+    default_err = "NVIDIA API key not configured or endpoint unreachable. Running in offline demo mode."
     return ExplainResponse(
         finding_id=finding.id,
         explanation=(
@@ -109,8 +129,10 @@ def generate_demo_fallback_explanation(finding: AnalysisFinding) -> ExplainRespo
         proposed_remediation=proposal,
         model_used="deterministic-demo-fallback",
         status="DEMO_FALLBACK",
-        error="NVIDIA API key not configured or endpoint unreachable. Running in offline demo mode."
+        error=redact_secrets(error_msg or default_err),
+        error_category=error_category or "OFFLINE_FALLBACK"
     )
+
 
 
 def explain_finding_with_nemotron(
@@ -179,19 +201,23 @@ def explain_finding_with_nemotron(
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.2,
-            max_tokens=4096
+            max_tokens=8192
         )
 
         content = response.choices[0].message.content or ""
         if not content.strip() and hasattr(response.choices[0].message, "reasoning_content"):
-            content = getattr(response.choices[0].message, "reasoning_content") or ""
+            rc = getattr(response.choices[0].message, "reasoning_content") or ""
+            if "```json" in rc:
+                content = rc.split("```json")[-1].split("```")[0].strip()
+            else:
+                content = rc
         cleaned_content = content.strip()
 
         # Robust extraction of JSON object
         if "```json" in cleaned_content:
-            cleaned_content = cleaned_content.split("```json", 1)[1].split("```", 1)[0].strip()
+            cleaned_content = cleaned_content.split("```json")[-1].split("```")[0].strip()
         elif "```" in cleaned_content:
-            cleaned_content = cleaned_content.split("```", 1)[1].split("```", 1)[0].strip()
+            cleaned_content = cleaned_content.split("```")[-1].split("```")[0].strip()
         elif "{" in cleaned_content and "}" in cleaned_content:
             start_idx = cleaned_content.find("{")
             end_idx = cleaned_content.rfind("}") + 1
@@ -224,26 +250,42 @@ def explain_finding_with_nemotron(
             status="ANALYZED_LLM"
         )
 
-    except (APITimeoutError, APIConnectionError) as net_err:
-        logger.warning("NVIDIA API network/timeout error: %s. Falling back to labeled demo mode.", type(net_err).__name__)
-        fallback = generate_demo_fallback_explanation(finding)
-        fallback.error = f"NVIDIA API communication timeout/connection error ({type(net_err).__name__}). Running in offline demo mode."
-        return fallback
-    except (RateLimitError, APIStatusError) as api_err:
-        logger.warning("NVIDIA API status error (%s). Falling back to labeled demo mode.", getattr(api_err, "status_code", "unknown"))
-        fallback = generate_demo_fallback_explanation(finding)
-        fallback.error = f"NVIDIA API returned error status ({type(api_err).__name__}). Running in offline demo mode."
-        return fallback
-    except OpenAIError as oai_err:
-        logger.warning("NVIDIA/OpenAI client error: %s. Falling back to labeled demo mode.", type(oai_err).__name__)
-        fallback = generate_demo_fallback_explanation(finding)
-        fallback.error = f"NVIDIA API client error ({type(oai_err).__name__}). Running in offline demo mode."
-        return fallback
-    except (json.JSONDecodeError, KeyError, Exception) as err:
-        logger.warning("LLM API call or response parsing failed: %s. Falling back to labeled demo mode.", str(err))
-        fallback = generate_demo_fallback_explanation(finding)
-        fallback.error = f"Nemotron response processing error: {type(err).__name__} - {str(err)}"
-        return fallback
+    except AuthenticationError as auth_err:
+        safe_msg = "Invalid or expired NVIDIA API key (AuthenticationError HTTP 401). Please check NVIDIA_API_KEY."
+        logger.error("Nemotron explain auth failure [stage: chat_completion]: %s", safe_msg)
+        return generate_demo_fallback_explanation(finding, error_msg=safe_msg, error_category="AUTHENTICATION_ERROR")
+    except RateLimitError as rate_err:
+        safe_msg = "NVIDIA NIM rate limit or credit quota reached (RateLimitError HTTP 429). Please verify account credits."
+        logger.warning("Nemotron explain rate limit [stage: chat_completion]: %s", safe_msg)
+        return generate_demo_fallback_explanation(finding, error_msg=safe_msg, error_category="RATE_LIMIT_ERROR")
+    except NotFoundError as nf_err:
+        safe_msg = f"Configured model '{model_name}' not found on NVIDIA NIM endpoint (NotFoundError HTTP 404)."
+        logger.error("Nemotron explain model missing [stage: chat_completion]: %s", safe_msg)
+        return generate_demo_fallback_explanation(finding, error_msg=safe_msg, error_category="MODEL_NOT_FOUND_ERROR")
+    except APITimeoutError as timeout_err:
+        safe_msg = "NVIDIA NIM inference request timed out (APITimeoutError). Model reasoning took longer than configured limit."
+        logger.warning("Nemotron explain timeout [stage: chat_completion]: %s", safe_msg)
+        return generate_demo_fallback_explanation(finding, error_msg=safe_msg, error_category="TIMEOUT_ERROR")
+    except APIConnectionError as conn_err:
+        safe_msg = "Network connection error reaching NVIDIA NIM endpoint (APIConnectionError)."
+        logger.warning("Nemotron explain connection error [stage: network_connect]: %s", safe_msg)
+        return generate_demo_fallback_explanation(finding, error_msg=safe_msg, error_category="CONNECTION_ERROR")
+    except APIStatusError as status_err:
+        code = getattr(status_err, "status_code", "unknown")
+        safe_msg = f"NVIDIA NIM API returned error status HTTP {code} (APIStatusError)."
+        logger.warning("Nemotron explain API status error [stage: chat_completion, code: %s]: %s", code, safe_msg)
+        return generate_demo_fallback_explanation(finding, error_msg=safe_msg, error_category="API_STATUS_ERROR")
+    except json.JSONDecodeError as json_err:
+        safe_msg = f"Nemotron response processing error: Unterminated or invalid JSON ({json_err.msg}) (JSONDecodeError)."
+        logger.warning("Nemotron explain JSON decode failure [stage: response_parsing]: %s", safe_msg)
+        return generate_demo_fallback_explanation(finding, error_msg=safe_msg, error_category="JSON_DECODE_ERROR")
+
+    except Exception as err:
+        safe_msg = f"Nemotron explanation failed ({type(err).__name__}): {redact_secrets(str(err))}"
+        logger.warning("Nemotron explain unexpected error [stage: pipeline]: %s", safe_msg)
+        return generate_demo_fallback_explanation(finding, error_msg=safe_msg, error_category="UNEXPECTED_ERROR")
+
+
 
 
 def run_full_investigation_workflow(network: NetworkModel) -> AgentWorkflowResponse:

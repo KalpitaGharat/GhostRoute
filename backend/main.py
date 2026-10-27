@@ -243,9 +243,10 @@ def get_remediation_audit_history(limit: int = 50) -> List[Dict[str, Any]]:
 # ============================================================================
 
 @app.get("/ai/health", response_model=AiHealthResponse)
-def get_ai_provider_health() -> AiHealthResponse:
+def get_ai_provider_health(check_live: bool = False) -> AiHealthResponse:
     """Report AI copilot readiness, model configuration, and endpoint status without leaking keys."""
-    return get_ai_health()
+    return get_ai_health(check_live=check_live)
+
 
 
 @app.post("/findings/{finding_id}/enrichment", response_model=FindingEnrichment)

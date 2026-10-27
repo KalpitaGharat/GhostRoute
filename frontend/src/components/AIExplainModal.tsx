@@ -82,13 +82,30 @@ export const AIExplainModal: React.FC<AIExplainModalProps> = ({
                 <h2 className="text-base font-bold text-[#F1F5F9]">
                   NVIDIA Nemotron 3.5 Forensics & Root Cause Explainer
                 </h2>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/50 font-bold uppercase flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>{enrichment?.status || 'ANALYZED_LLM'}</span>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border font-bold uppercase flex items-center gap-1 ${
+                  enrichment?.status === 'ANALYZED_LLM'
+                    ? 'bg-emerald-950 text-emerald-300 border-emerald-500/50'
+                    : enrichment?.status === 'DEMO_FALLBACK'
+                    ? 'bg-amber-950 text-amber-300 border-amber-500/50'
+                    : 'bg-rose-950 text-rose-300 border-rose-500/50'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    enrichment?.status === 'ANALYZED_LLM' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                  }`} />
+                  <span>
+                    {enrichment?.status === 'ANALYZED_LLM'
+                      ? 'Live Nemotron'
+                      : enrichment?.status === 'DEMO_FALLBACK'
+                      ? 'Offline Fallback'
+                      : (enrichment?.status || 'Analyzing...')}
+                  </span>
                 </span>
               </div>
               <p className="text-xs font-mono text-[#94A3B8]">
-                Model: <span className="text-violet-300 font-bold">nvidia/nemotron-3.5-lightning-30b-a3b</span> • Endpoint: <span className="text-[#22D3EE]">NVIDIA NIM</span>
+                Model: <span className="text-violet-300 font-bold">{enrichment?.model_used || 'nvidia/nemotron-3.5-lightning-30b-a3b'}</span> • Source:{' '}
+                <span className={enrichment?.status === 'ANALYZED_LLM' ? 'text-[#22D3EE] font-bold' : 'text-amber-400 font-bold'}>
+                  {enrichment?.status === 'ANALYZED_LLM' ? 'NVIDIA NIM' : 'Deterministic Graph Fallback'}
+                </span>
               </p>
             </div>
           </div>
@@ -111,6 +128,7 @@ export const AIExplainModal: React.FC<AIExplainModalProps> = ({
             </button>
           </div>
         </div>
+
 
         {/* LOADING STATE */}
         {isLoading && !enrichment && (
@@ -141,6 +159,26 @@ export const AIExplainModal: React.FC<AIExplainModalProps> = ({
         {/* MAIN FORENSIC DOSSIER */}
         {enrichment && (
           <div className="p-6 overflow-y-auto flex-1 space-y-4 text-xs font-sans">
+            {/* OFFLINE FALLBACK DIAGNOSTIC BANNER */}
+            {enrichment.status === 'DEMO_FALLBACK' && (
+              <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/40 text-xs font-mono text-amber-200 flex items-start gap-3">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-amber-300">Offline Fallback Mode Active</span>
+                    {enrichment.error_category && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-300 border border-amber-500/40">
+                        {enrichment.error_category}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                    {enrichment.error || 'Live NVIDIA Nemotron copilot was unavailable. Displaying deterministic reachability graph forensics.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* EXECUTIVE SUMMARY */}
             <div className="p-4 rounded-xl bg-[#0B142B] border border-[#202D50] shadow-md space-y-1.5">
               <div className="text-[11px] font-mono text-[#A855F7] font-bold uppercase tracking-wider flex items-center gap-1.5">
@@ -152,6 +190,7 @@ export const AIExplainModal: React.FC<AIExplainModalProps> = ({
                   'Critical policy violation: unintended TCP:5432 trust path from DMZ web server dmz-web-01 to production database db-prod-01 via fw-core breaches POL-DMZ-DB-ISOLATION, exposing the database to web-tier compromise and potential data exfiltration.'}
               </p>
             </div>
+
 
             {/* TECHNICAL ROOT CAUSE & PATH BREAKDOWN */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-[11px]">
@@ -264,13 +303,22 @@ export const AIExplainModal: React.FC<AIExplainModalProps> = ({
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5 text-[#22D3EE]" />
-              <span>{enrichment?.cached ? 'Source: Hash-Cached Analysis' : 'Source: Fresh NIM Inference'}</span>
+              <span>
+                {enrichment?.status === 'DEMO_FALLBACK'
+                  ? (enrichment?.cached ? 'Source: Cached Fallback' : 'Source: Deterministic Graph Fallback')
+                  : (enrichment?.cached ? 'Source: Hash-Cached Analysis' : 'Source: Fresh NIM Inference')}
+              </span>
             </span>
             <span>•</span>
-            <span className="text-violet-300">
-              Confidence: {((enrichment?.confidence ?? 0.92) * 100).toFixed(0)}%
+            <span className={enrichment?.status === 'DEMO_FALLBACK' ? 'text-amber-300 font-bold' : 'text-violet-300'}>
+              {enrichment?.status === 'DEMO_FALLBACK'
+                ? 'Path Reachability: Deterministic (100% Path Proof)'
+                : enrichment?.confidence !== null && enrichment?.confidence !== undefined
+                ? `Model Confidence: ${(enrichment.confidence * 100).toFixed(0)}%`
+                : 'Model Confidence: Evaluated'}
             </span>
           </div>
+
 
           <div className="flex items-center gap-2">
             {onOpenRemediation && (

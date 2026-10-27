@@ -286,6 +286,7 @@ class ExplainResponse(BaseModel):
     model_used: str = Field(..., description="Model identifier used for inference")
     status: Literal["ANALYZED_LLM", "DEMO_FALLBACK", "ERROR"] = Field(..., description="Status of explanation generation")
     error: Optional[str] = Field(None, description="Error details if LLM call failed")
+    error_category: Optional[str] = Field(None, description="Diagnostic error category if LLM call failed")
 
 
 # ============================================================================
@@ -407,6 +408,7 @@ class FindingEnrichment(BaseModel):
     confidence: Optional[float] = Field(None, description="Confidence score (0.0 to 1.0) derived strictly from deterministic graph evidence")
     limitations: List[str] = Field(default_factory=list)
     error: Optional[str] = None
+    error_category: Optional[str] = Field(None, description="Diagnostic error category if provider call failed")
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     cached: bool = False
 
@@ -430,6 +432,9 @@ class AiHealthResponse(BaseModel):
     base_url: str
     has_api_key: bool
     live_inference_ready: bool
+    last_verified_at: Optional[str] = None
+    last_error: Optional[str] = None
+    last_error_category: Optional[str] = None
 
 
 class CorrelationRequest(BaseModel):
