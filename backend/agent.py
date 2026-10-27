@@ -77,9 +77,9 @@ def get_nvidia_client() -> Optional[OpenAI]:
 
     base_url = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
     try:
-        timeout_seconds = float(os.getenv("NVIDIA_TIMEOUT", "120.0"))
+        timeout_seconds = float(os.getenv("NVIDIA_TIMEOUT", "60.0"))
     except (ValueError, TypeError):
-        timeout_seconds = 120.0
+        timeout_seconds = 60.0
 
     return OpenAI(base_url=base_url, api_key=api_key.strip(), timeout=timeout_seconds)
 
